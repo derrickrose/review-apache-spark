@@ -1,0 +1,11 @@
+pandas
+pandas-stubs
+matplotlib
+matplotlib-stubs
+seaborn # plotting
+typing-extensions
+pyspark==3.5.7
+numpy<2.0
+setuptools>=68.0.0
+pyarrow
+plotly # for diagram on pypandas

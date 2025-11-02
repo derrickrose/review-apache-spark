@@ -13,3 +13,4 @@ object Kopa extends App:
   } yield inv
 
   println(result) // Success(Infinity)
+
