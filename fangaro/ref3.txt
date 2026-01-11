@@ -1,0 +1,53 @@
+Netflix is one of the world's leading entertainment services, with over 300 million paid memberships in over 190 countries enjoying TV series, films and games across a wide variety of genres and languages. Members can play, pause and resume watching as much as they want, anytime, anywhere, and can change their plans at any time.
+
+Member DSE is at the forefront of these innovations. Our mission is to use data to improve how subscribers experience streaming and to drive higher-quality viewing and discovery experiences, no matter where, how, and when global members are watching. The Member Insights Engineering team combines capabilities across the analytical data and tooling/services/libraries layers with the goal of delivering insights through applications. The work on the Insights Engineering team has a strong technical lean and requires the ability to work effectively with engineering-centric tooling and systems.
+
+As an Analytics Engineer, you’ll be at the forefront of using analytics and data engineering skills on big data while working with product, technology, and business teams.  In this role, you will be developing and maintaining data pipelines, tools, and data products that make insights about our subscribers widely available across the company. You’ll build these data products in partnership with an interdisciplinary team of engineers, designers, analysts, and scientists. This role directly supports the New Content Experiences team, which is responsible for expanding Netflix’s content offering beyond traditional shows and movies to include new, more casual, timely, and interactive formats.
+
+In this role, you will:
+
+Develop and maintain data pipelines, tooling, and visualizations that make member insights widely available across the company
+
+Identify, compute, and validate the appropriate data sources and metrics to measure success in a product area
+
+Partner with data engineers to design and implement a data architecture that bridges across experimentation, analytics, and operational reporting
+
+Partner with product managers and engineering to conduct forensic investigations into logging, including real-time monitoring of new features the team is launching to support live events
+
+Proactively explore trends in member engagement to surface future opportunities
+
+Cultivate strong partnerships with cross-functional stakeholders
+
+Coach partners to self-serve with existing tools, and evangelize for scaled approaches to expand data access and insights beyond our team
+
+We are looking for:
+
+Passion for using data to see Netflix from the eyes of our members
+
+Exceptional communication with technical and non-technical audiences; highly effective at developing meaningful stakeholder relationships and deep domain expertise
+
+Comfort with ambiguity; ability to thrive with minimal oversight and process
+
+Highly fluent in SQL for working with big data; familiarity with dbt is a plus
+
+Proficient with scripting languages such as Python
+
+Experienced in engineering data pipelines and orchestrating workflows
+
+Passion for exploring and improving technical datasets and logging
+
+Familiarity with software engineering best practices (e.g. source control, code reviews, unit testing)
+
+Embodies the Netflix values while bringing a new perspective to continue improving our culture
+
+Generally, our compensation structure consists solely of an annual salary; we do not have bonuses. You choose each year how much of your compensation you want in salary versus stock options. To determine your personal top of market compensation, we rely on market indicators and consider your specific job family, background, skills, and experience to determine your compensation in the market range. The range for this role is $170K - $720K.
+
+Netflix provides comprehensive benefits including Health Plans, Mental Health support, a 401(k) Retirement Plan with employer match, Stock Option Program, Disability Programs, Health Savings and Flexible Spending Accounts, Family-forming benefits, and Life and Serious Injury Benefits. We also offer paid leave of absence programs.  Full-time hourly employees accrue 35 days annually for paid time off to be used for vacation, holidays, and sick paid time off. Full-time salaried employees are immediately entitled to flexible time off. See more detail about our Benefits here.
+
+Netflix is a unique culture and environment.  Learn more here.
+
+Inclusion is a Netflix value and we strive to host a meaningful interview experience for all candidates. If you want an accommodation/adjustment for a disability or any other reason during the hiring process, please send a request to your recruiting partner.
+
+We are an equal-opportunity employer and celebrate diversity, recognizing that diversity builds stronger teams. We approach diversity and inclusion seriously and thoughtfully. We do not discriminate on the basis of race, religion, color, ancestry, national origin, caste, sex, sexual orientation, gender, gender identity or expression, age, disability, medical condition, pregnancy, genetic makeup, marital status, or military service.
+
+Job is open for no less than 7 days and will be removed when the position is filled.

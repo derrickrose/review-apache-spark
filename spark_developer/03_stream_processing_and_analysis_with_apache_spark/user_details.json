@@ -1,0 +1,10 @@
+{"user_id":"u1","first_name":"Jean","last_name":"Dupont","phone":"+33 6 12 34 56 01","street_address":"12 rue de Rivoli","zip_code":"75001","city":"Paris","country":"FR"}
+{"user_id":"u2","first_name":"Marie","last_name":"Lefevre","phone":"+33 6 12 34 56 02","street_address":"8 avenue Victor Hugo","zip_code":"75016","city":"Paris","country":"FR"}
+{"user_id":"u3","first_name":"Luc","last_name":"Martin","phone":"+33 6 12 34 56 03","street_address":"22 rue de la République","zip_code":"69002","city":"Lyon","country":"FR"}
+{"user_id":"u4","first_name":"Sophie","last_name":"Bernard","phone":"+33 6 12 34 56 04","street_address":"5 place Bellecour","zip_code":"69002","city":"Lyon","country":"FR"}
+{"user_id":"u5","first_name":"Paul","last_name":"Durand","phone":"+33 6 12 34 56 05","street_address":"14 rue Sainte-Catherine","zip_code":"33000","city":"Bordeaux","country":"FR"}
+{"user_id":"u6","first_name":"Emma","last_name":"Moreau","phone":"+33 6 12 34 56 06","street_address":"3 rue Masséna","zip_code":"06000","city":"Nice","country":"FR"}
+{"user_id":"u7","first_name":"Thomas","last_name":"Leroy","phone":"+33 6 12 34 56 07","street_address":"18 boulevard Haussmann","zip_code":"75009","city":"Paris","country":"FR"}
+{"user_id":"u8","first_name":"Clara","last_name":"Robert","phone":"+33 6 12 34 56 08","street_address":"7 rue Nationale","zip_code":"59000","city":"Lille","country":"FR"}
+{"user_id":"u9","first_name":"Antoine","last_name":"Girard","phone":"+33 6 12 34 56 09","street_address":"25 rue d’Alsace","zip_code":"67000","city":"Strasbourg","country":"FR"}
+{"user_id":"u10","first_name":"Camille","last_name":"Fournier","phone":"+33 6 12 34 56 10","street_address":"9 quai de la Joliette","zip_code":"13002","city":"Marseille","country":"FR"}

@@ -1,2 +1,7 @@
-venv/
-.idea/
+venv
+.idea
+target
+*.parquet
+*.gz
+test_tech
+test_tech_2
