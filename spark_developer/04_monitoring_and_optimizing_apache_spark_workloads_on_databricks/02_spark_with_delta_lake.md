@@ -98,12 +98,12 @@ data.
 Advanced operations enabled by Delta Lake's transaction log
 
 - Fine grained DELETE and UPDATE operations
-- row-level modifications (including condition-based opartions)
+    - row-level modifications (including condition-based opartions)
 - MERGE operations
     - true upserts (update+insert, can do delete as well)
     - support for complex merge conditions
 - Schema evolution
-    - including the CREZATE OR REPLACE TABLE operation
+    - including the CREATE OR REPLACE TABLE operation
 - Time Travel
     - Ability to select previous versions of data (view or RESTORE)
 
@@ -125,7 +125,7 @@ Integration between Databricks, Apache Spark and Delta Lake
   ```
 - writes to delta lake tables
   ```python
-  df.write.format("delta").save("table_path")
+  df.write.format("delta").mode("append").save("table_path")
   ```
 - Delta Lake is the default for Databricks
   ```python
@@ -160,9 +160,16 @@ Optimizing and maintaining Delta tables for production workloads
 
 Example to mention in demo:
 
-- ALTER TABLE my_table SET TBLPROPERTIES ( 'delta.autoOptimize.optimizeWrite" = 'true', '
-  delta.autoOptimize.autoCompact' = 'true') This config ensures that files are written and compacted efficiently without
-  needing to run OPTIMIZE manually.
+  ```sql
+    ALTER TABLE my_table SET TBLPROPERTIES ( 
+      'delta.autoOptimize.optimizeWrite" = 'true', 
+      'delta.autoOptimize.autoCompact' = 'true'
+    ) 
+  ```
+
+This config ensures that files are written and compacted efficiently without needing to run OPTIMIZE manually.
+
+[Click here for demo](./02_spark_with_delta_lake_write_table_demo.md)
 
 ## Introduction to Apache Iceberg
 
@@ -193,7 +200,7 @@ An alternative open table format for cloud data lakes
     - can change partition scheme without changing queries
 - Partition evolution:
     - can change how a table is partitioned without rewriting data
-    - example : change from daily to monthly partitoins seamlessly
+    - example : change from daily to monthly partitions seamlessly
     - old and new partition schemes can coexist
     - queryies automatically use the most efficient partition scheme
     - enables gradual migration of partitioning strategy

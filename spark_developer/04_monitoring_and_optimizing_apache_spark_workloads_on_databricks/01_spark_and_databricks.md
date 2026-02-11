@@ -19,9 +19,9 @@ A unified data and AI platform built by the creators of Apache Spark
   governance, but can be costly and inflexible
 - A data lake, stores raw, diverse data types (structured, semi-structured, unstructured, offering low-cost storage and
   flexibility, but often lacks performance, and data management capabilities)
-- The lakehouse architecture brigns together the best of both worlds : A unified architecture combining the data
+- The lakehouse architecture brings together the best of both worlds : A unified architecture combining the data
   warehouse and data lake
-    - The srucuture of the Data Warehouse with the extensibility of the Data Lake
+    - The srucuture of the Data Warehouse (and transactional capabilites) with the extensibility of the Data Lake
     - Scalability via separation of storage and compute
     - Support for all data types (structured, unstructured, ...)
     - Unified batch and stream processing support
