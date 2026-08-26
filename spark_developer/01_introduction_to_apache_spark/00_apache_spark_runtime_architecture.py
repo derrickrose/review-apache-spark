@@ -23,7 +23,7 @@
 ## UC Berkeley's AMPLab      donated to apache foundation        structured streaming
 
 # spark components
-""""
+""" "
 +-----------------------+ +----------------------+ +------------+ +------------+ +-------------+
 |  Python Scala/Java    | |    Python Scala/Java | |   SQL      | |  R         | |  Scala/Java |
 |  Structured Streaming | |   MLlib              | |  Spark SQL | | SparkR API | |  GraphX     |

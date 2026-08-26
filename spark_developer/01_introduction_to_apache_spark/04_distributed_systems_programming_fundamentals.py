@@ -64,7 +64,7 @@
 #### avoid unnecessary partitioning
 #### using co-located data
 #### applying effective partitioning strategies
-""""
+""" "
 +---------+   +------------+    +------------+
 | k1, k2 |    | k2, k3     |   |  k2, k3    |      stage1
 +--------+    +------------+   +------------+

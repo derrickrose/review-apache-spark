@@ -74,13 +74,13 @@ result.show()
 print(
     "------------------------ iddle for 15 minutes before collect ----------------------------"
 )
-time.sleep(60 * 15)
+
 result.collect()
 print(
     "------------------------ iddle for 15 minutes before unpersist ----------------------------"
 )
-result.unpersist()
-
+# result.unpersist()
+time.sleep(60 * 15)
 # some theory about spark
 
 # lazy evaluation

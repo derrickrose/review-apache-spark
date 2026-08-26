@@ -70,6 +70,7 @@ spark.read.orc("path")
 spark.read.table("catalog.table")
 spark.read.format("format").load("path")
 """
+
 ## DataFrameWriter (dataframe.write)
 #### Flexible output format and partitioning
 #### Supports various save modes (overwrite, append)

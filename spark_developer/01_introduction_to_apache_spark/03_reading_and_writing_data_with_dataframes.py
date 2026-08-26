@@ -1,14 +1,30 @@
 # reading data with pyspark
 ## from csv
+# https://github.com/MangoTheCat/Modelling-Airbnb-Prices/blob/master/listings.csv.gz
 from pyspark.sql import SparkSession
 
-spark = SparkSession.builder.appName("reading_data_with_dataframes").getOrCreate()
+# spark = SparkSession.builder.appName("reading_data_with_dataframes").getOrCreate()
 # df = spark.read.csv("listings.csv.gz", header="true", inferSchema="true", multiLine="true", escape='"')
+
+spark = (
+    SparkSession.builder.appName("reading_data_with_dataframes")
+    .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.2.0")
+    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+    .config("spark.sql.catalog.spark_catalog",
+            "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    .getOrCreate()
+)
+
 df = (
     spark.read.format("csv")
     .option("header", "true")
     .option("inferSchema", "true")
-    .load("listings.csv.gz", header="true", inferSchema="true", escape='"')
+    .option("multiLine", "true")
+    .option("escape", '"')
+    .option("quote", '"')
+    .option("delimiter", ",")
+    .load("../data/listings.csv.gz")
+    # .load("../data/listings.csv.gz", header="true", inferSchema="true", escape='"')
 )
 
 # print schema of the dataframe
@@ -104,14 +120,14 @@ print(df.schema)
 StructType([StructField('id', StringType(), True), StructField('listing_url', StringType(), True), StructField('scrape_id', StringType(), True), StructField('last_scraped', StringType(), True), StructField('source', StringType(), True), StructField('name', StringType(), True), StructField('description', StringType(), True), StructField('neighborhood_overview', StringType(), True), StructField('picture_url', StringType(), True), StructField('host_id', StringType(), True), StructField('host_url', StringType(), True), StructField('host_name', StringType(), True), StructField('host_since', StringType(), True), StructField('host_location', StringType(), True), StructField('host_about', StringType(), True), StructField('host_response_time', StringType(), True), StructField('host_response_rate', StringType(), True), StructField('host_acceptance_rate', StringType(), True), StructField('host_is_superhost', StringType(), True), StructField('host_thumbnail_url', StringType(), True), StructField('host_picture_url', StringType(), True), StructField('host_neighbourhood', StringType(), True), StructField('host_listings_count', StringType(), True), StructField('host_total_listings_count', StringType(), True), StructField('host_verifications', StringType(), True), StructField('host_has_profile_pic', StringType(), True), StructField('host_identity_verified', StringType(), True), StructField('neighbourhood', StringType(), True), StructField('neighbourhood_cleansed', StringType(), True), StructField('neighbourhood_group_cleansed', StringType(), True), StructField('latitude', StringType(), True), StructField('longitude', StringType(), True), StructField('property_type', StringType(), True), StructField('room_type', StringType(), True), StructField('accommodates', StringType(), True), StructField('bathrooms', StringType(), True), StructField('bathrooms_text', StringType(), True), StructField('bedrooms', StringType(), True), StructField('beds', StringType(), True), StructField('amenities', StringType(), True), StructField('price', StringType(), True), StructField('minimum_nights', StringType(), True), StructField('maximum_nights', StringType(), True), StructField('minimum_minimum_nights', StringType(), True), StructField('maximum_minimum_nights', StringType(), True), StructField('minimum_maximum_nights', StringType(), True), StructField('maximum_maximum_nights', StringType(), True), StructField('minimum_nights_avg_ntm', StringType(), True), StructField('maximum_nights_avg_ntm', DoubleType(), True), StructField('calendar_updated', StringType(), True), StructField('has_availability', StringType(), True), StructField('availability_30', StringType(), True), StructField('availability_60', StringType(), True), StructField('availability_90', StringType(), True), StructField('availability_365', StringType(), True), StructField('calendar_last_scraped', StringType(), True), StructField('number_of_reviews', DoubleType(), True), StructField('number_of_reviews_ltm', DoubleType(), True), StructField('number_of_reviews_l30d', DoubleType(), True), StructField('availability_eoy', StringType(), True), StructField('number_of_reviews_ly', StringType(), True), StructField('estimated_occupancy_l365d', StringType(), True), StructField('estimated_revenue_l365d', StringType(), True), StructField('first_review', StringType(), True), StructField('last_review', StringType(), True), StructField('review_scores_rating', DoubleType(), True), StructField('review_scores_accuracy', DoubleType(), True), StructField('review_scores_cleanliness', DoubleType(), True), StructField('review_scores_checkin', DoubleType(), True), StructField('review_scores_communication', StringType(), True), StructField('review_scores_location', DoubleType(), True), StructField('review_scores_value', DoubleType(), True), StructField('license', IntegerType(), True), StructField('instant_bookable', StringType(), True), StructField('calculated_host_listings_count', IntegerType(), True), StructField('calculated_host_listings_count_entire_homes', IntegerType(), True), StructField('calculated_host_listings_count_private_rooms', IntegerType(), True), StructField('calculated_host_listings_count_shared_rooms', StringType(), True), StructField('reviews_per_month', StringType(), True)])
 """
 
-## deplay() function is feature of databricks
+## display() function is feature of databricks
 ## and data profiling
 
 # explicitly defining the schema
 ## no nead to define all the schema
 ## and no need to infer the schema
 ## only used for text based file format like CSV and JSON, self describing tables no need (delta table or parquet)
-## best practice since change of data my generate errors
+## best practice since change of data might generate errors
 ## it is also worth mentioning that schema inferring does trigger a job and in the opposite the other way does not
 from pyspark.sql.types import (
     StructType,
@@ -119,23 +135,35 @@ from pyspark.sql.types import (
     StringType,
     IntegerType,
     DoubleType,
+    LongType,
+    DateType
 )
 
 schema = StructType(
     [
-        StructField("id", StringType(), True),
+        StructField("id", IntegerType(), True),
         StructField("listing_url", StringType(), True),
-        StructField("scrape_id", StringType(), True),
-        StructField("last_scraped", StringType(), True),
-        StructField("source", StringType(), True),
+        StructField("scrape_id", LongType(), True),
+        StructField("last_scraped", DateType(), True),
         StructField("name", StringType(), True),
+        StructField("summary", StringType(), True),
+        StructField("space", StringType(), True),
         StructField("description", StringType(), True),
+        StructField("experiences_offered", StringType(), True),
         StructField("neighborhood_overview", StringType(), True),
+        StructField("notes", StringType(), True),
+        StructField("transit", StringType(), True),
+        StructField("access", StringType(), True),
+        StructField("interaction", StringType(), True),
+        StructField("house_rules", StringType(), True),
+        StructField("thumbnail_url", StringType(), True),
+        StructField("medium_url", StringType(), True),
         StructField("picture_url", StringType(), True),
-        StructField("host_id", StringType(), True),
+        StructField("xl_picture_url", StringType(), True),
+        StructField("host_id", IntegerType(), True),
         StructField("host_url", StringType(), True),
         StructField("host_name", StringType(), True),
-        StructField("host_since", StringType(), True),
+        StructField("host_since", DateType(), True),
         StructField("host_location", StringType(), True),
         StructField("host_about", StringType(), True),
         StructField("host_response_time", StringType(), True),
@@ -145,75 +173,83 @@ schema = StructType(
         StructField("host_thumbnail_url", StringType(), True),
         StructField("host_picture_url", StringType(), True),
         StructField("host_neighbourhood", StringType(), True),
-        StructField("host_listings_count", StringType(), True),
-        StructField("host_total_listings_count", StringType(), True),
+        StructField("host_listings_count", IntegerType(), True),
+        StructField("host_total_listings_count", IntegerType(), True),
         StructField("host_verifications", StringType(), True),
         StructField("host_has_profile_pic", StringType(), True),
         StructField("host_identity_verified", StringType(), True),
+        StructField("street", StringType(), True),
         StructField("neighbourhood", StringType(), True),
         StructField("neighbourhood_cleansed", StringType(), True),
         StructField("neighbourhood_group_cleansed", StringType(), True),
-        StructField("latitude", StringType(), True),
-        StructField("longitude", StringType(), True),
+        StructField("city", StringType(), True),
+        StructField("state", StringType(), True),
+        StructField("zipcode", StringType(), True),
+        StructField("market", StringType(), True),
+        StructField("smart_location", StringType(), True),
+        StructField("country_code", StringType(), True),
+        StructField("country", StringType(), True),
+        StructField("latitude", DoubleType(), True),
+        StructField("longitude", DoubleType(), True),
+        StructField("is_location_exact", StringType(), True),
         StructField("property_type", StringType(), True),
         StructField("room_type", StringType(), True),
-        StructField("accommodates", StringType(), True),
-        StructField("bathrooms", StringType(), True),
-        StructField("bathrooms_text", StringType(), True),
-        StructField("bedrooms", StringType(), True),
-        StructField("beds", StringType(), True),
+        StructField("accommodates", IntegerType(), True),
+        StructField("bathrooms", DoubleType(), True),
+        StructField("bedrooms", IntegerType(), True),
+        StructField("beds", IntegerType(), True),
+        StructField("bed_type", StringType(), True),
         StructField("amenities", StringType(), True),
+        StructField("square_feet", IntegerType(), True),
         StructField("price", StringType(), True),
-        StructField("minimum_nights", StringType(), True),
-        StructField("maximum_nights", StringType(), True),
-        StructField("minimum_minimum_nights", StringType(), True),
-        StructField("maximum_minimum_nights", StringType(), True),
-        StructField("minimum_maximum_nights", StringType(), True),
-        StructField("maximum_maximum_nights", StringType(), True),
-        StructField("minimum_nights_avg_ntm", StringType(), True),
-        StructField("maximum_nights_avg_ntm", DoubleType(), True),
+        StructField("weekly_price", StringType(), True),
+        StructField("monthly_price", StringType(), True),
+        StructField("security_deposit", StringType(), True),
+        StructField("cleaning_fee", StringType(), True),
+        StructField("guests_included", IntegerType(), True),
+        StructField("extra_people", StringType(), True),
+        StructField("minimum_nights", IntegerType(), True),
+        StructField("maximum_nights", IntegerType(), True),
         StructField("calendar_updated", StringType(), True),
         StructField("has_availability", StringType(), True),
-        StructField("availability_30", StringType(), True),
-        StructField("availability_60", StringType(), True),
-        StructField("availability_90", StringType(), True),
-        StructField("availability_365", StringType(), True),
-        StructField("calendar_last_scraped", StringType(), True),
-        StructField("number_of_reviews", DoubleType(), True),
-        StructField("number_of_reviews_ltm", DoubleType(), True),
-        StructField("number_of_reviews_l30d", DoubleType(), True),
-        StructField("availability_eoy", StringType(), True),
-        StructField("number_of_reviews_ly", StringType(), True),
-        StructField("estimated_occupancy_l365d", StringType(), True),
-        StructField("estimated_revenue_l365d", StringType(), True),
-        StructField("first_review", StringType(), True),
-        StructField("last_review", StringType(), True),
-        StructField("review_scores_rating", DoubleType(), True),
-        StructField("review_scores_accuracy", DoubleType(), True),
-        StructField("review_scores_cleanliness", DoubleType(), True),
-        StructField("review_scores_checkin", DoubleType(), True),
-        StructField("review_scores_communication", StringType(), True),
-        StructField("review_scores_location", DoubleType(), True),
-        StructField("review_scores_value", DoubleType(), True),
-        StructField("license", IntegerType(), True),
+        StructField("availability_30", IntegerType(), True),
+        StructField("availability_60", IntegerType(), True),
+        StructField("availability_90", IntegerType(), True),
+        StructField("availability_365", IntegerType(), True),
+        StructField("calendar_last_scraped", DateType(), True),
+        StructField("number_of_reviews", IntegerType(), True),
+        StructField("first_review", DateType(), True),
+        StructField("last_review", DateType(), True),
+        StructField("review_scores_rating", IntegerType(), True),
+        StructField("review_scores_accuracy", IntegerType(), True),
+        StructField("review_scores_cleanliness", IntegerType(), True),
+        StructField("review_scores_checkin", IntegerType(), True),
+        StructField("review_scores_communication", IntegerType(), True),
+        StructField("review_scores_location", IntegerType(), True),
+        StructField("review_scores_value", IntegerType(), True),
+        StructField("requires_license", StringType(), True),
+        StructField("license", StringType(), True),
+        StructField("jurisdiction_names", StringType(), True),
         StructField("instant_bookable", StringType(), True),
+        StructField("cancellation_policy", StringType(), True),
+        StructField("require_guest_profile_picture", StringType(), True),
+        StructField("require_guest_phone_verification", StringType(), True),
         StructField("calculated_host_listings_count", IntegerType(), True),
-        StructField("calculated_host_listings_count_entire_homes", IntegerType(), True),
-        StructField(
-            "calculated_host_listings_count_private_rooms", IntegerType(), True
-        ),
-        StructField("calculated_host_listings_count_shared_rooms", StringType(), True),
-        StructField("reviews_per_month", StringType(), True),
+        StructField("reviews_per_month", DoubleType(), True),
     ]
 )
 
 df1 = spark.read.csv(
-    "listings.csv.gz", header="true", multiLine="true", escape='"', schema=schema
+    "../data/listings.csv.gz",
+    header="true",
+    multiLine="true",
+    escape='"',
+    schema=schema,
 )
-print(df.schema)
+print(df1.schema)
 assert df.schema == df1.schema
-
-# example of DDL schema (Data Definition Language) using sql
+#
+# # example of DDL schema (Data Definition Language) using sql
 ddl_schema = """
 id INTEGER NOT NULL,
 listing_url BOOLEAN,
@@ -230,26 +266,35 @@ df3 = (
     spark.read.format("csv")
     .option("header", "true")
     .schema(ddl_schema)
-    .load("listings.csv.gz")
+    .load("../data/listings.csv.gz")
 )
 df3.printSchema()
-
+#
 # writing to parquet file
-df3.write.format("parquet").mode("overwrite").save("03_write_dir/listings.parquet")
+df3.write.format("parquet").mode("overwrite").save("../data/01_write_dir/listings.parquet")
+import time
+
+
 import os
+#
+# for path in os.listdir("../data/01_write_dir"):
+#     if os.path.isdir(f"../data/01_write_dir/{path}"):
+#         for file in os.listdir(f"../data/01_write_dir/{path}"):
+#             print(f"../data/01_write_dir/{path}/{file}")
+#     else:
+#         print(f"../data/01_write_dir/{path}")
+#
+# # writing to a table
+# ## to new table
+## need delta to be installed, the 3.x target spark 3.5.O
+df3.write.format("delta").mode("overwrite").saveAsTable("listings")
+# another option is using writeTo invoking DataFrameWriterV2
+# DA_name = ""
+# ## options are append, overwrite, partition table ...
+# ## preferedApproach
+# # df3.writeTo(f"{DA_name}.listings").createOrReplace()
 
-for path in os.listdir("03_write_dir"):
-    if os.path.isdir(f"03_write_dir/{path}"):
-        for file in os.listdir(f"03_write_dir/{path}"):
-            print(f"03_write_dir/{path}/{file}")
-    else:
-        print(f"03_write_dir/{path}")
 
-# writing to a table
-## to new table
-# df3.write.format("delta").mode("overwrite").saveAsTable("listings")
-## another option is using writeTo invoking DataFrameWriterV2
-DA_name = ""
-## options are append, overwrite, partition table ...
-## preferedApproach
-# df3.writeTo(f"{DA_name}.listings").createOrReplace()
+time.sleep(60 * 5)
+
+from delta import configure_spark_with_delta_pip
