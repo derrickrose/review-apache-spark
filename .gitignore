@@ -5,3 +5,6 @@ target
 *.gz
 test_tech
 test_tech_2
+**/**data/*
+*.crc
+**/_SUCCESS
