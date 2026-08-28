@@ -50,7 +50,7 @@ bracket notation       (e.g. in joins)
 column with special 
 characters too
 
-Column object          required when building complex expressions or using column-specific    df.select(col("name")).alias("customer_name")
+Column object          required when building complex expressions or using column-specific    df.select(col("name").alias("customer_name"))
                        operations like alias(), cast(), asc(), desc()
 
 
