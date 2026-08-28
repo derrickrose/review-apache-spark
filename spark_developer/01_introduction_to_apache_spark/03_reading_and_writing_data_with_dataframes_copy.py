@@ -140,8 +140,10 @@ listings_df.createOrReplaceGlobalTempView("listings_global_temp")
 listings_df.createOrReplaceTempView("listings_temp")
 
 
-spark.sql("select * from listings_temp limit 10").show()
-spark.sql("select * from global_temp.listings_global_temp limit 10").show()
+spark.sql("select * from listings_temp limit 10").dropna(subset=["neighborhood_overview"]).show()
+
+spark.sql("select * from listings_temp limit 10").filter(col("neighborhood_overview").isNotNull()).show()
+
 
 
 import time

@@ -3,7 +3,7 @@
 # extract year from DateType() column with .withColumn("Year", year("date_column"))"
 # rename column with .withColumnRenamed("old_name", "new_name") note: do it grouped with other column transformation
 # select specific columns with .select("col1", "col2") not .select(col("col1"), col("col2")) neither selectExpr("col1", "col2") the second one is for sql expression like "year(date_column) as year"
-
+# dataset https://www.opdi.aero/flight-list-data
 """
 Function make_timestamp_ntz to check too
 Function withColumn with when() to check too and otherwise()
