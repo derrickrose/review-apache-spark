@@ -64,7 +64,12 @@ from pyspark.sql.functions import (
 spark = SparkSession.builder.appName(
     "01_demo_basic_ETL_with_dataframe_api"
 ).getOrCreate()
-flights_df = spark.read.format("parquet").load("flights_1988_2008.parquet")
+flights_df = spark.read.format("parquet").load("../data_flights")
+
+
+flights_df.printSchema()
+
+spark.stop()
 
 output_df = (
     flights_df.drop(
