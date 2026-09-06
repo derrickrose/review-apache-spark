@@ -69,7 +69,7 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
 from pyspark.sql.functions import struct
 
-df.groupBy("category").agg(
+grou = df.groupBy("category").agg(
 
     collect_list(
         struct(
@@ -79,6 +79,19 @@ df.groupBy("category").agg(
 
         )
 
-    )
+    ).alias("movies")
 
-).show()
+)
+
+deduped = df.groupBy("category").agg(
+    collect_set(struct(
+        "id",
+        "title",
+        "date"
+    )).alias("movies")
+)
+
+from pyspark.sql.functions import size
+
+grou.withColumn("size", size("movies")).show()
+deduped.withColumn("size", size("movies")).show()
