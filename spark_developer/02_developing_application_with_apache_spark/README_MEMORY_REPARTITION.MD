@@ -151,3 +151,205 @@ Spark only writes to disk when:
 | User Memory        | 1.01 GB                                        | ✅ Yes            | Query planning, UDFs, Catalyst optimizer |
 | Off‑Heap           | 0.5 GB                                         | ✅ Yes            | Tungsten, Arrow, vectorized execution    |
 | **Total**          | **≈7.1 GB (≈7.5 GB on Kubernetes + Kerberos)** | —                | Full process memory footprint            |
+
+
+
+
+
+
+
+
+666666666666
+
+
+
+═══════════════════════════════════════════════════════════════
+SPARK EXECUTOR / DRIVER MEMORY — CORRECT FORMULA
+UNIVERSAL (all platforms) + EMR SERVERLESS specifics
+═══════════════════════════════════════════════════════════════
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 1 — UNIVERSAL SPARK  (identical on ALL platforms)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Runs identically on: Local, Standalone, YARN, Kubernetes,
+EMR Serverless, EMR on EKS, Databricks, Dataproc, HDInsight.
+Lives INSIDE the JVM. The cluster manager never touches it.
+
+  ┌─────────────────────────────────────────────────────────┐
+  │  reserved   = 300 MB                                    │
+  │               ← HARDCODED in UnifiedMemoryManager.scala │
+  │               ← NOT configurable                        │
+  │               ← NOT max(300, 0.1 × heap)  ← WRONG      │
+  │               ← always 300 MB, any heap size            │
+  │                                                         │
+  │  usable     = heap − 300                                │
+  │                                                         │
+  │  unified    = usable × spark.memory.fraction            │
+  │                         (default: 0.6)                  │
+  │  user       = usable × (1 − spark.memory.fraction)      │
+  │                         (default: 0.4)                  │
+  │                                                         │
+  │  storage    = unified × spark.memory.storageFraction    │
+  │                          (default: 0.5)                 │
+  │  execution  = unified × (1 − storageFraction)           │
+  │                          (default: 0.5)                 │
+  └─────────────────────────────────────────────────────────┘
+
+  SOFT LIMIT RULES (universal)
+  ─────────────────────────────
+  storage and execution are SOFT limits, not hard walls.
+
+  execution can borrow  → up to full unified pool
+                          (if storage is completely idle)
+  storage can borrow    → up to full unified pool
+                          (if execution is completely idle)
+  storage eviction floor→ storage soft limit
+                          (execution cannot evict below this)
+  execution cannot spill→ OOM if exceeded → executor killed ❌
+  storage can spill     → with MEMORY_AND_DISK persist ✅
+
+  WHAT EACH ZONE HOLDS (universal)
+  ──────────────────────────────────
+  reserved    Spark internal metadata, task bookkeeping
+              → NOT accessible to user code
+
+  user        Python/Scala/Java UDFs, lambdas
+              Non-managed objects (Catalyst, scheduler)
+              → NO spill → OOM if exceeded ❌
+
+  storage     persist() / cache() data, broadcast variables
+              → CAN spill to disk (MEMORY_AND_DISK) ✅
+              → CAN be evicted by execution
+
+  execution   Shuffle read/write buffers
+              Sort buffers, hash join build side
+              toLocalIterator deser + ser buffers
+              → CANNOT spill ❌
+              → OOM if exceeded → executor killed
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 2 — CONTAINER LAYER  (varies per platform)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Total container  = heap
+                   + memoryOverhead
+                   + pyspark.memory        (PySpark only)
+                   + offHeap               (if enabled)
+
+  ┌──────────────────┬──────────────────────────────────────┐
+  │ Platform         │ memoryOverhead formula               │
+  ├──────────────────┼──────────────────────────────────────┤
+  │ EMR Serverless   │ heap × 0.10  ← NO 384 MB floor       │
+  │ YARN (EMR EC2)   │ max(384 MB, heap × 0.10)             │
+  │ Kubernetes/EKS   │ max(384 MB, heap × 0.10)             │
+  │ Standalone/Local │ not applicable (no container)        │
+  └──────────────────┴──────────────────────────────────────┘
+
+  pyspark.memory  = spark.executor.pyspark.memory
+                    (default: 0)
+                    ← Python worker process, OUTSIDE the JVM
+                    ← if 0, Python shares memoryOverhead
+                      with Netty/NIO → OOM risk on PySpark jobs
+
+  offHeap         = spark.memory.offHeap.size
+                    (default: 0, opt-in)
+                    ← Tungsten native memory, OUTSIDE JVM heap
+                    ← only active if
+                      spark.memory.offHeap.enabled = true
+
+  WHAT EACH CONTAINER ZONE HOLDS
+  ────────────────────────────────
+  memoryOverhead  Netty buffers, NIO, JVM thread stacks
+                  + Python worker if pyspark.memory not set
+                  → NOT accessible to Spark memory manager
+
+  pyspark.memory  Python interpreter + worker process
+                  → dedicated region, separate from overhead
+
+  offHeap         Tungsten columnar data, sort buffers
+                  → managed by Spark, outside GC pressure
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 3 — EMR SERVERLESS SPECIFICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Parameter name    spark.emr-serverless.memoryOverheadFactor
+  Default value     0.10
+  Floor             NONE  ← differs from YARN/K8s
+
+  Worker sizes      Must fit discrete supported configurations.
+                    Total (heap + overhead) is validated at
+                    job submission time. Job rejected if it
+                    does not fit a supported worker size.
+                    Example for 4 vCPU workers:
+                      heap=8g  → container=9011 MB  ✅
+                      heap=26g → container=29286 MB ✅
+
+  PySpark warning   If spark.executor.pyspark.memory is NOT set,
+                    the Python worker competes inside the
+                    819 MB overhead region (for 8g heap)
+                    alongside Netty/NIO buffers.
+                    → Set explicitly for PySpark jobs:
+                      spark.executor.pyspark.memory = 1g (min)
+
+  Off-heap          spark.memory.offHeap.enabled = true
+                    spark.memory.offHeap.size     = <size>
+                    Adds a fourth component to total container.
+                    Useful for reducing GC pressure on large
+                    datasets.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 4 — PLATFORM COMPARISON SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Component                  Universal?  Who controls it
+  ─────────────────────────────────────────────────────────
+  reserved = 300 MB          ✅ Yes      Spark (JVM internal)
+  memory.fraction            ✅ Yes      Spark (JVM internal)
+  storageFraction            ✅ Yes      Spark (JVM internal)
+  storage/execution pools    ✅ Yes      Spark (JVM internal)
+  soft limit borrowing rules ✅ Yes      Spark (JVM internal)
+  ─────────────────────────────────────────────────────────
+  memoryOverhead formula     ❌ No       Cluster manager
+  384 MB floor on overhead   ❌ No       YARN / K8s only
+  pyspark.memory region      ❌ No       Cluster manager
+  offHeap (opt-in)           ❌ No       You (config)
+  Worker size validation     ❌ No       EMR Serverless only
+  ─────────────────────────────────────────────────────────
+
+  OS overhead estimates (community, not officially documented)
+  ─────────────────────────────────────────────────────────
+  Linux VM (bare metal)      10–15 %  kernel, filesystem cache
+  Docker container           15–20 %  overlayFS, cgroups
+  Kubernetes pod             20–25 %  kubelet, CRI-O, agents
+  YARN cluster               18–22 %  NodeManager, shuffle svc
+  Kerberos-secured           +2–5 %   auth cache, encryption
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 5 — SOURCES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  reserved = 300 MB (hardcoded constant)
+  → github.com/apache/spark/blob/master/core/src/main/scala/
+    org/apache/spark/memory/UnifiedMemoryManager.scala
+
+  memory.fraction = 0.6, storageFraction = 0.5 (defaults)
+  → spark.apache.org/docs/latest/
+    configuration.html#memory-management
+
+  memoryOverhead EMR Serverless (no 384 MB floor)
+  → docs.aws.amazon.com/emr/latest/
+    EMR-Serverless-UserGuide/jobs-spark.html
+
+  memoryOverhead YARN / Kubernetes (384 MB floor)
+  → spark.apache.org/docs/latest/running-on-yarn.html
+
+  OS overhead figures
+  → community estimates, not officially documented
+═══════════════════════════════════════════════════════════════
