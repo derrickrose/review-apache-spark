@@ -1,0 +1,41 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+26/10/04 15:04:33 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+26/10/04 15:04:41 WARN ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 2.3.0
+26/10/04 15:04:41 WARN ObjectStore: setMetaStoreSchemaVersion called but recording version is disabled: version = 2.3.0, comment = Set by MetaStore UNKNOWN@172.21.0.4
+[Stage 1:=======>                                                   (1 + 7) / 8][Stage 1:=============================>                             (4 + 4) / 8][Stage 1:====================================>                      (5 + 3) / 8][Stage 1:============================================>              (6 + 2) / 8]                                                                                26/10/04 15:04:59 WARN SessionState: METASTORE_FILTER_HOOK will be ignored, since hive.security.authorization.manager is set to instance of HiveAuthorizerFactory.
+26/10/04 15:04:59 WARN HiveConf: HiveConf of name hive.internal.ss.authz.settings.applied.marker does not exist
+[Stage 3:===========>       (5 + 3) / 8][Stage 4:>                  (0 + 5) / 9][Stage 3:===========>       (5 + 3) / 8][Stage 4:==>                (1 + 5) / 9][Stage 3:===========>       (5 + 3) / 8][Stage 4:====>              (2 + 5) / 9][Stage 3:===========>       (5 + 3) / 8][Stage 4:======>            (3 + 5) / 9][Stage 3:==============>    (6 + 2) / 8][Stage 4:======>            (3 + 6) / 9][Stage 3:==============>    (6 + 2) / 8][Stage 4:==========>        (5 + 4) / 9][Stage 3:==============>    (6 + 2) / 8][Stage 4:============>      (6 + 3) / 9][Stage 3:==============>    (6 + 2) / 8][Stage 4:==============>    (7 + 2) / 9][Stage 3:==============>    (6 + 2) / 8][Stage 4:================>  (8 + 1) / 9][Stage 3:============================================>              (6 + 2) / 8][Stage 3:===================================================>       (7 + 1) / 8][Stage 7:>                                                         (0 + 8) / 23][Stage 7:==>                                                       (1 + 8) / 23][Stage 7:=======>                                                  (3 + 8) / 23][Stage 7:=================>                                        (7 + 8) / 23][Stage 7:====================>                                     (8 + 8) / 23][Stage 7:======================>                                   (9 + 8) / 23][Stage 7:===========================>                             (11 + 8) / 23][Stage 7:=============================>                           (12 + 8) / 23][Stage 7:=====================================>                   (15 + 8) / 23][Stage 7:=======================================>                 (16 + 7) / 23][Stage 7:==========================================>              (17 + 6) / 23][Stage 7:============================================>            (18 + 5) / 23][Stage 7:===============================================>         (19 + 4) / 23][Stage 7:====================================================>    (21 + 2) / 23]                                                                                [Stage 8:>                  (0 + 8) / 9][Stage 9:>                  (0 + 0) / 8][Stage 8:==>                (1 + 8) / 9][Stage 9:>                  (0 + 0) / 8][Stage 8:======>            (3 + 6) / 9][Stage 9:==>                (1 + 2) / 8][Stage 8:========>          (4 + 5) / 9][Stage 9:=======>           (3 + 3) / 8][Stage 8:========>          (4 + 5) / 9][Stage 9:=========>         (4 + 3) / 8][Stage 8:==========>        (5 + 4) / 9][Stage 9:=========>         (4 + 4) / 8][Stage 8:============>      (6 + 3) / 9][Stage 9:===========>       (5 + 3) / 8][Stage 8:==============>    (7 + 2) / 9][Stage 9:===========>       (5 + 3) / 8][Stage 8:================>  (8 + 1) / 9][Stage 9:===========>       (5 + 3) / 8][Stage 9:====================================>                      (5 + 3) / 8][Stage 9:============================================>              (6 + 2) / 8][Stage 12:>                                                        (0 + 8) / 19][Stage 12:===>                                                     (1 + 8) / 19][Stage 12:======>                                                  (2 + 8) / 19][Stage 12:===============>                                         (5 + 8) / 19][Stage 12:==================>                                      (6 + 8) / 19][Stage 12:=====================>                                   (7 + 8) / 19][Stage 12:========================>                                (8 + 8) / 19][Stage 12:=============================>                          (10 + 8) / 19][Stage 12:===================================>                    (12 + 7) / 19][Stage 12:======================================>                 (13 + 6) / 19][Stage 12:=========================================>              (14 + 5) / 19][Stage 12:===============================================>        (16 + 3) / 19][Stage 12:==================================================>     (17 + 2) / 19][Stage 12:=====================================================>  (18 + 1) / 19]                                                                                {
+ "lab": "lab31_cbo_stats.py",
+ "variant": "baseline",
+ "runs": 1,
+ "runtime_median_s": 42.12,
+ "runtime_p95_s": 42.12,
+ "runtime_cv_pct": 0.0,
+ "checksum": "25699744:11896451279838855250811",
+ "input": 728406,
+ "output": 333133813,
+ "shuffle_r": 1311107813,
+ "shuffle_w": 1311107813,
+ "spill_mem": 0,
+ "spill_disk": 0,
+ "tasks": 50,
+ "failed": 0,
+ "gc_ms": 4060,
+ "run_ms": 202753,
+ "peak_mem": 6736050432,
+ "max_task_ms": 15424,
+ "median_task_ms": 2578.5,
+ "p95_task_ms": 12957,
+ "max_over_median": 5.98,
+ "gc_pct": 2.0,
+ "extra": "{\"bhj\": 0, \"estimated_dim_mb\": 317.7, \"actual_dim_mb\": 317.7, \"estimate_ratio\": 1.0, \"query_s\": 24.4}",
+ "correct": "reference",
+ "verdict": "PASS",
+ "conf": "{\"spark.sql.catalogImplementation\": \"hive\", \"spark.sql.warehouse.dir\": \"s3a://lake/out/lab31/warehouse\", \"spark.hadoop.javax.jdo.option.ConnectionURL\": \"jdbc:derby:;databaseName=/tmp/lab31_metastore;create=true\", \"spark.sql.statistics.size.autoUpdate.enabled\": \"false\"}"
+}

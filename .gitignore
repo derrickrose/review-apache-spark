@@ -8,3 +8,5 @@ test_tech_2
 **/**data/*
 *.crc
 **/_SUCCESS
+**/*/.pyc
+**/__pycache__/*

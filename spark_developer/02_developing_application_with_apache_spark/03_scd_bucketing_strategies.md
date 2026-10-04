@@ -74,10 +74,10 @@ Is this a Dimension or Fact table?
 
 **Example:**
 ```python
-# Without bucketing - requires shuffle (SLOW)
+# Without 06_bucketing - requires shuffle (SLOW)
 orders.join(customers, "customer_id")  # Shuffles 100GB + 10GB
 
-# With bucketing - no shuffle (FAST)
+# With 06_bucketing - no shuffle (FAST)
 orders_bucketed.join(customers_bucketed, "customer_id")  # Reads matching buckets directly
 ```
 
@@ -113,7 +113,7 @@ orders_bucketed.join(customers_bucketed, "customer_id")  # Reads matching bucket
 **Bucketing Strategy:**
 ```python
 # ✅ BUCKET ONCE - NEVER RE-BUCKET
-# Perfect for bucketing because data is immutable
+# Perfect for 06_bucketing because data is immutable
 
 date_dimension.write \
     .bucketBy(50, "date_key") \
@@ -172,14 +172,14 @@ updated_customers.write \
 # Scenario: Customer dimension, 10M rows, updated weekly
 
 # Cost: 
-# - Re-bucketing time: 10 minutes (weekly)
+# - Re-06_bucketing time: 10 minutes (weekly)
 
 # Benefit:
 # - 7 days × 50 queries/day = 350 fast joins per week
 # - Each join 5 minutes faster = 1,750 minutes saved
 # - ROI: 175x (1,750 min saved / 10 min cost)
 
-# Conclusion: Re-bucketing is worth it! ✅
+# Conclusion: Re-06_bucketing is worth it! ✅
 ```
 
 **Characteristics:**
@@ -506,7 +506,7 @@ spark.sql("""
 
 **Bucketing Strategy:**
 ```python
-# ⚠️ CHALLENGING - Updates break bucketing
+# ⚠️ CHALLENGING - Updates break 06_bucketing
 # Option 1: Re-bucket periodically (if updates are batch)
 # Option 2: Partition by last_update_date + bucket
 
@@ -528,7 +528,7 @@ updated_orders.write \
 **Better alternative - Convert to Type 2:**
 ```python
 # Instead of updating rows, append new rows with state changes
-# This makes it append-only (perfect for bucketing!)
+# This makes it append-only (perfect for 06_bucketing!)
 
 order_state_changes.write \
     .partitionBy("state_change_date") \
@@ -673,7 +673,7 @@ spark.sql("""
     AND is_current = true
 """)
 
-# Append new versions (maintains bucketing!):
+# Append new versions (maintains 06_bucketing!):
 customer_changes.write \
     .bucketBy(100, "customer_id") \
     .mode("append") \
@@ -821,7 +821,7 @@ spark.sql("""
 # 1. Partition pruning on fact_orders (scans only 2024 partitions)
 # 2. Bucketed join (NO SHUFFLE!) ✅
 # 3. Aggregation
-# Result: 2 minutes (vs 20 minutes without bucketing)
+# Result: 2 minutes (vs 20 minutes without 06_bucketing)
 
 # ===================================================================
 # QUERY 2: Product Performance by Region
@@ -1058,8 +1058,8 @@ streaming_df \
 # Initial data is bucketed
 initial_data.write.bucketBy(100, "id").saveAsTable("my_table")
 
-# Later append WITHOUT bucketing
-new_data.write.mode("append").saveAsTable("my_table")  # ❌ Breaks bucketing!
+# Later append WITHOUT 06_bucketing
+new_data.write.mode("append").saveAsTable("my_table")  # ❌ Breaks 06_bucketing!
 ```
 
 **Why it's wrong:**
@@ -1088,7 +1088,7 @@ tableA.write.bucketBy(100, "id").saveAsTable("A")
 # Table B: 200 buckets
 tableB.write.bucketBy(200, "id").saveAsTable("B")  # ❌ Different count!
 
-# Join won't benefit from bucketing
+# Join won't benefit from 06_bucketing
 spark.table("A").join(spark.table("B"), "id")  # Shuffle required!
 ```
 
@@ -1127,7 +1127,7 @@ small_dim.write \
 # For small tables, don't bucket - use broadcast join
 from pyspark.sql.functions import broadcast
 
-large_fact.join(broadcast(small_dim), "id")  # ✅ Faster than bucketing
+large_fact.join(broadcast(small_dim), "id")  # ✅ Faster than 06_bucketing
 ```
 
 **Rule of thumb:**
@@ -1175,7 +1175,7 @@ customers.write.bucketBy(100, "customer_id").saveAsTable("customers")
 
 # Spark doesn't know they're bucketed!
 spark.table("orders").join(spark.table("customers"), "customer_id")
-# Might still shuffle if Spark doesn't detect bucketing
+# Might still shuffle if Spark doesn't detect 06_bucketing
 ```
 
 **Why it's wrong:**
@@ -1184,11 +1184,11 @@ spark.table("orders").join(spark.table("customers"), "customer_id")
 
 **Right:**
 ```python
-# After bucketing, analyze tables
+# After 06_bucketing, analyze tables
 spark.sql("ANALYZE TABLE orders COMPUTE STATISTICS")
 spark.sql("ANALYZE TABLE customers COMPUTE STATISTICS")
 
-# Verify bucketing is recognized
+# Verify 06_bucketing is recognized
 spark.table("orders").join(spark.table("customers"), "customer_id").explain()
 # Should show "BucketJoin" in plan ✅
 ```
@@ -1205,7 +1205,7 @@ hourly_customer_updates.write \
     .mode("overwrite") \
     .saveAsTable("dim_customer")
 
-# Re-bucketing 24 times per day! ❌ Very expensive
+# Re-06_bucketing 24 times per day! ❌ Very expensive
 ```
 
 **Why it's wrong:**
@@ -1269,7 +1269,7 @@ customers_df.write \
     .saveAsTable("customers_bucketed")
 
 # 3. Weekly re-bucket job (Sunday night)
-# Re-bucketing time: 1 hour (acceptable for weekly update)
+# Re-06_bucketing time: 1 hour (acceptable for weekly update)
 
 # Query performance:
 result = spark.table("trades_bucketed") \
@@ -1378,7 +1378,7 @@ spark.sql("""
 
 # patient_id | visit_id | admitted_date | diagnosed_date | treated_date | discharged_date
 
-# Problem: Updates break bucketing!
+# Problem: Updates break 06_bucketing!
 # Can't maintain bucketed organization with frequent updates
 ```
 
@@ -1394,7 +1394,7 @@ spark.sql("""
 # 1001     | treated    | 2024-01-05  ← New row instead of update
 # 1001     | discharged | 2024-01-08  ← New row instead of update
 
-# Now it's append-only! Perfect for bucketing:
+# Now it's append-only! Perfect for 06_bucketing:
 visit_events.write \
     .partitionBy("event_date") \
     .bucketBy(100, "patient_id") \
@@ -1443,7 +1443,7 @@ user_profiles.write \
 
 # Fact: User events (High velocity!)
 # - 10B events per day
-# - Can't do real-time bucketing
+# - Can't do real-time 06_bucketing
 
 # Solution: Micro-batch with partition + bucket
 # Events processed every 5 minutes:

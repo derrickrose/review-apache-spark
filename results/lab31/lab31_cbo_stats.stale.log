@@ -1,0 +1,41 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+26/10/04 15:05:50 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+26/10/04 15:05:58 WARN ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 2.3.0
+26/10/04 15:05:58 WARN ObjectStore: setMetaStoreSchemaVersion called but recording version is disabled: version = 2.3.0, comment = Set by MetaStore UNKNOWN@172.21.0.4
+[Stage 0:>                                                          (0 + 1) / 1]                                                                                [Stage 1:=============================>                             (4 + 4) / 8][Stage 1:====================================>                      (5 + 3) / 8][Stage 1:============================================>              (6 + 2) / 8][Stage 1:===================================================>       (7 + 1) / 8]                                                                                26/10/04 15:06:06 WARN SessionState: METASTORE_FILTER_HOOK will be ignored, since hive.security.authorization.manager is set to instance of HiveAuthorizerFactory.
+26/10/04 15:06:06 WARN HiveConf: HiveConf of name hive.internal.ss.authz.settings.applied.marker does not exist
+[Stage 6:====================================>                      (5 + 3) / 8][Stage 6:============================================>              (6 + 2) / 8][Stage 6:===================================================>       (7 + 1) / 8]                                                                                [Stage 7:====================================>                      (5 + 3) / 8][Stage 7:============================================>              (6 + 2) / 8][Stage 7:===================================================>       (7 + 1) / 8]                                                                                [Stage 8:>                                                          (0 + 8) / 9][Stage 8:======>                                                    (1 + 8) / 9][Stage 8:==========================>                                (4 + 5) / 9][Stage 8:================================>                          (5 + 4) / 9][Stage 8:====================================================>      (8 + 1) / 9]                                                                                [Stage 9:=============================>                             (4 + 4) / 8][Stage 9:====================================>                      (5 + 3) / 8][Stage 9:============================================>              (6 + 2) / 8][Stage 9:===================================================>       (7 + 1) / 8]                                                                                [Stage 10:>                                                         (0 + 8) / 9][Stage 10:======>                                                   (1 + 8) / 9][Stage 10:============>                                             (2 + 7) / 9][Stage 10:======================================>                   (6 + 3) / 9][Stage 10:=============================================>            (7 + 2) / 9][Stage 10:===================================================>      (8 + 1) / 9]                                                                                {
+ "lab": "lab31_cbo_stats.py",
+ "variant": "stale",
+ "runs": 1,
+ "runtime_median_s": 52.45,
+ "runtime_p95_s": 52.45,
+ "runtime_cv_pct": 0.0,
+ "checksum": "25699744:11896451279838855250811",
+ "input": 1454489,
+ "output": 333138179,
+ "shuffle_r": 233,
+ "shuffle_w": 233,
+ "spill_mem": 0,
+ "spill_disk": 0,
+ "tasks": 40,
+ "failed": 0,
+ "gc_ms": 1640,
+ "run_ms": 84862,
+ "peak_mem": 28991029248,
+ "max_task_ms": 14832,
+ "median_task_ms": 532.0,
+ "p95_task_ms": 6210,
+ "max_over_median": 27.88,
+ "gc_pct": 1.9,
+ "extra": "{\"bhj\": 1, \"estimated_dim_mb\": 0.44, \"actual_dim_mb\": 317.71, \"estimate_ratio\": 0.0014, \"query_s\": 25.46}",
+ "correct": "OK",
+ "verdict": "PASS",
+ "conf": "{\"spark.sql.catalogImplementation\": \"hive\", \"spark.sql.warehouse.dir\": \"s3a://lake/out/lab31/warehouse\", \"spark.hadoop.javax.jdo.option.ConnectionURL\": \"jdbc:derby:;databaseName=/tmp/lab31_metastore;create=true\", \"spark.sql.statistics.size.autoUpdate.enabled\": \"false\"}"
+}

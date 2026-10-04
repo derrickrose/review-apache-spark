@@ -1,0 +1,3 @@
+lab01_shuffle_join baseline OK 65s :: - | reference | 31.58 s
+lab01_shuffle_join shj OK 65s :: - | OK | 32.0 s
+

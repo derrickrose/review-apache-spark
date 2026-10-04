@@ -253,7 +253,7 @@ df.write \
     .partitionBy("year", "month", "day") \  # Daily, not hourly
     .parquet("s3://bucket/events")
 
-# Solution 2: Dynamic partitioning with bucketing
+# Solution 2: Dynamic partitioning with 06_bucketing
 df.write \
     .partitionBy("date") \
     .bucketBy(24, "hour") \  # 24 buckets representing hours
@@ -313,7 +313,7 @@ PARTITIONED BY (
 
 # Bucketing transform
 PARTITIONED BY (
-    bucket(N, column)  # Hash-based bucketing
+    bucket(N, column)  # Hash-based 06_bucketing
 )
 
 # Truncate transform (for strings)

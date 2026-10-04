@@ -1,0 +1,59 @@
+# Local lab stack (plan §2.1): Spark 4.1 + Iceberg 1.12 REST catalog + SeaweedFS (S3 API)
+# Usage: docker compose up -d --build
+#   Jupyter http://localhost:8888 · Spark UI http://localhost:4040 · History Server http://localhost:18080
+#   S3 endpoint http://localhost:8333 (admin / password)
+# MinIO is not used: its images are no longer published on Docker Hub or quay.io.
+services:
+  s3:
+    image: chrislusf/seaweedfs:latest
+    command: server -dir=/data -master.volumeSizeLimitMB=1024 -volume.max=200 -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports: ["8333:8333"]
+    volumes:
+      - s3-data:/data
+      - ./conf/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1"]
+      interval: 5s
+      retries: 30
+
+  s3-init:
+    image: amazon/aws-cli:latest
+    depends_on:
+      s3: { condition: service_healthy }
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: password
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - for b in warehouse lake spark-events; do aws --endpoint-url http://s3:8333 s3 mb s3://$$b || true; done
+
+  iceberg-rest:
+    image: apache/iceberg-rest-fixture:1.10.1
+    depends_on:
+      s3-init: { condition: service_completed_successfully }
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: password
+      AWS_REGION: us-east-1
+      CATALOG_WAREHOUSE: s3://warehouse/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://s3:8333
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+    ports: ["8181:8181"]
+
+  spark:
+    build: .
+    depends_on: [iceberg-rest]
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: password
+      AWS_REGION: us-east-1
+    ports: ["8888:8888", "4040-4045:4040-4045", "18080:18080"]
+    volumes:
+      - ../:/workspace
+      - ./conf/spark-defaults.conf:/opt/spark-conf/spark-defaults.conf:ro
+    mem_limit: 12g
+
+volumes:
+  s3-data:
