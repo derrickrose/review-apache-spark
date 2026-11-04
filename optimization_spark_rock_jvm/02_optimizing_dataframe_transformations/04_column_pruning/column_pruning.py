@@ -1,12 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import array_contains, upper
 
-spark = (
-    SparkSession.builder
-    .appName("Column Pruning")
-    .master("local[2]")
-    .getOrCreate()
-)
+spark = SparkSession.builder.appName("Column Pruning").master("local[2]").getOrCreate()
 
 sc = spark.sparkContext
 
@@ -18,6 +13,9 @@ join_condition = guitar_players_df["band"] == bands_df["id"]
 guitarists_bands_df = guitar_players_df.join(bands_df, join_condition, "inner")
 guitarists_bands_df.explain()
 
+# Column pruning is a Catalyst optimizer rule that removes columns the query does not need.
+# Spark reads, shuffles and processes only the columns that are actually referenced downstream.
+# In this example, the query only needs the "name" column from the "bands" DataFrame, so Spark will only read and process that column.
 """
 == Physical Plan ==
 AdaptiveSparkPlan isFinalPlan=false
@@ -29,7 +27,9 @@ AdaptiveSparkPlan isFinalPlan=false
       +- FileScan json [hometown#40,id#41L,name#42,year#43L] Batched: false, DataFilters: [isnotnull(id#41L)], Format: JSON, Location: InMemoryFileIndex(1 paths)[file:/home/frils/Documents/reviews/review-apache-spark/rock_the_jvm_sp..., PartitionFilters: [], PushedFilters: [IsNotNull(id)], ReadSchema: struct<hometown:string,id:bigint,name:string,year:bigint>
 """
 
-guitarists_without_bands_df = guitar_players_df.join(bands_df, join_condition, "left_anti")
+guitarists_without_bands_df = guitar_players_df.join(
+    bands_df, join_condition, "left_anti"
+)
 guitarists_without_bands_df.explain()
 
 """
@@ -67,10 +67,8 @@ Spark tends to drop columns as early as possible.
 Should be YOUR goal as well.
 """
 
-rock_df = (
-    guitar_players_df
-    .join(bands_df, join_condition)
-    .join(guitars_df, array_contains(guitar_players_df["guitars"], guitars_df["id"]))
+rock_df = guitar_players_df.join(bands_df, join_condition).join(
+    guitars_df, array_contains(guitar_players_df["guitars"], guitars_df["id"])
 )
 
 print("here---------------------")

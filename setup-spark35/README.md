@@ -1,93 +1,126 @@
-# Lab environment & tooling — Spark 3.5.0 / Java 17 (cloud-parity stack)
+# Spark 3.5.0 lab stack (cloud parity)
 
-Duplicate of [`../setup`](../setup) pinned to the Spark line used by EMR 7.x and Glue 5.0 (plan §2.1 version policy).
-Only the differences are listed here; everything else (data scripts, harness, lab contract) is identical.
+Local lab environment for [`../plan/plan.md`](../plan/plan.md), pinned to the Spark line used by EMR 7.x and Glue 5.0.
+Same labs and harness as [`../setup`](../setup) (Spark 4.1.1). Both stacks can run at the same time.
 
-| | `../setup` | `setup-spark35` (this folder) |
-|---|---|---|
-| Spark / Scala | 4.1.1 / 2.13 | **3.5.0 / 2.12** |
-| Java | 21 (Debian trixie) | **17** (Debian bookworm) |
-| Iceberg runtime | `iceberg-spark-runtime-4.1_2.13:1.12.0` | `iceberg-spark-runtime-3.5_2.12:1.12.0` |
-| Bundled Hadoop → s3a SDK | 3.4.2 → AWS SDK **v2** `bundle` | 3.3.4 → AWS SDK **v1** `aws-java-sdk-bundle:1.12.262` |
-| Python libs | latest pandas / pyarrow / numpy | `pandas<2.2`, `pyarrow<15`, `numpy<2` |
-| ANSI mode default | on | **off** |
-| Event log dir | `s3a://spark-events/` | `s3a://spark-events/spark35/` (Hadoop 3.3 rejects a bucket root) |
-| Host ports: Jupyter / UI / History / S3 / REST | 8888 / 4040 / 18080 / 8333 / 8181 | **8889 / 4050 / 18081 / 8334 / 8182** |
-| Results dir | `/workspace/results-spark35` | `/workspace/results-spark35-spark35` |
-| Lab 26 | baseline / explicit / **variant** (VARIANT) | baseline / explicit (VARIANT is Spark 4.0+) |
+**Stack:** Spark 3.5.0 / Scala 2.12 / Java 17 · Iceberg 1.12.0 REST catalog `lab` · SeaweedFS (S3 API) · History Server · Jupyter
 
-Both stacks can run at the same time (separate networks, volumes and ports).
-
-**Verified (2026-10-04):** smoke test (s3a Parquet, Iceberg REST create/insert/read, History Server), and lab 03 on 41.2M rows, 3 runs after warm-up:
-
-| Variant | Spark 3.5.0 median | max/median | Spark 4.1.1 median | max/median |
-|---|---|---|---|---|
-| baseline | 23.6 s | 9.2 | 19.2 s | 7.6 |
-| aqe_skew | 11.2 s | 1.3 | 9.7 s | 1.7 |
-| salted | 13.1 s | 2.4 | 13.6 s | 2.2 |
-
-All variants PASS their criteria with identical checksums. The remaining labs have not been executed on this stack.
-
-Commands below are the same as in `../setup`, with `setup` → `setup-spark35`, ports shifted, and the network `setup-spark35_default`.
-
----
-
-
-Companion to [`../plan/plan.md`](../plan/plan.md). Each file implements one section of the plan.
-
-| File | Plan section | Purpose |
-|---|---|---|
-| `docker-compose.yml`, `Dockerfile` | §2.1 | Local stack: Spark 3.5.0 (Java 17) + Iceberg 1.12.0 REST catalog `lab` + SeaweedFS (S3 API) + History Server + Jupyter |
-| `conf/spark-defaults.conf` | §1.6, M04 | Baseline config (catalog, s3a, event logs, Prometheus). Every override goes into the config record. |
-| `conf/s3.json` | §2.1 | Local S3 credentials (`admin` / `password`) |
-| `data/download_tlc.sh` | §3 | Downloads NYC TLC monthly Parquet + zone lookup from the official CloudFront host |
-| `data/prepare_tlc.py` | §3 | Normalizes schema drift across years, partitions by `pickup_date`, optional `--copies N` scale-up |
-| `data/gen_synthetic.py` | §3 | Seeded pathological data: uniform, zipf, hotkey, multihot, nullheavy, tinyfiles, mixedfiles, nested, wide |
-| `bench/bench.py` | §1.4–§1.5, §11 | Warm-up + N fresh-session runs, Spark REST metrics, checksum correctness gate, numeric pass criteria, one CSV row per variant |
-| `bench/run_labs.sh` | §7 | Runs every variant of every lab (baseline first) and prints `OK/ERROR :: verdict | correctness | runtime` |
-| `bench/labs/common.py` | §3 | Paths, loaders, file statistics, and same-schema synthetic substitutes for OSM / Common Crawl / NEXRAD / Landsat STAC |
-| `bench/labs/lab01…lab30_*.py` | §7 | The 30 core labs, one module each |
-
+| Service | URL |
+|---|---|
+| Jupyter | http://localhost:8889 |
+| Spark UI (live apps) | http://localhost:4050 – 4055 |
+| History Server | http://localhost:18081 |
+| S3 (`admin` / `password`) | http://localhost:8334 |
+| Iceberg REST | http://localhost:8182 |
 
 ## Quick start
 ```bash
+# from the repo root
 cd setup-spark35 && docker compose up -d --build
-# Jupyter http://localhost:8889 · Spark UI :4050 · History :18081 · S3 http://localhost:8334 (admin/password)
 
-# 1. Data: download, upload to the local S3, normalize
-./data/download_tlc.sh ./raw/tlc yellow 2024 2024
+# 1. Data (raw files are shared with ../setup; skip the download if already there)
+./data/download_tlc.sh ../setup/raw/tlc yellow 2024 2024
 docker run --rm --network setup-spark35_default -v "$PWD/../setup/raw:/raw" \
   -e AWS_ACCESS_KEY_ID=admin -e AWS_SECRET_ACCESS_KEY=password -e AWS_DEFAULT_REGION=us-east-1 \
   amazon/aws-cli --endpoint-url http://s3:8333 s3 sync /raw/tlc s3://lake/raw/tlc
 docker compose exec spark spark-submit /workspace/setup-spark35/data/prepare_tlc.py \
   --src s3a://lake/raw/tlc/yellow --dst s3a://lake/tlc/yellow
 
-# 2. One lab, one variant (3 measured runs after 1 warm-up)
+# 2. One lab, one variant (1 warm-up + 3 measured runs)
 docker compose exec spark python /workspace/setup-spark35/bench/bench.py \
-  --lab /workspace/setup-spark35/bench/labs/lab03_join_skew.py --variant baseline --out /workspace/results-spark35/lab03_join_skew.csv
+  --lab /workspace/setup-spark35/bench/labs/lab03_join_skew.py --variant baseline \
+  --out /workspace/results-spark35/lab03_join_skew.csv
 
-# 3. All labs, all variants
+# 3. All labs (or a subset by name)
 docker compose exec spark /workspace/setup-spark35/bench/run_labs.sh /workspace/results-spark35 3 1
-docker compose exec spark /workspace/setup-spark35/bench/run_labs.sh /workspace/results-spark35 3 1 lab05_aggregation_skew.py   # a subset
+docker compose exec spark /workspace/setup-spark35/bench/run_labs.sh /workspace/results-spark35 3 1 lab05_aggregation_skew.py
 ```
-Labs that use OSM, Common Crawl, NEXRAD or Landsat run on same-schema synthetic substitutes by default. Set `LAB_SOURCE=real` (with AWS credentials, on EMR/EC2 in us-east-1) to use the public datasets.
+Labs that use OSM, Common Crawl, NEXRAD or Landsat run on same-schema synthetic data by default. Set `LAB_SOURCE=real` (AWS credentials, us-east-1) to use the public datasets.
+
+## Interactive shell & Spark UI
+The shells run inside the `spark` container, so no local Spark install is needed. `cd` into this folder and use `docker compose exec`.
+`spark` (SparkSession) and `sc` (SparkContext) are ready at the prompt, and the repo root is mounted at `/workspace`.
+
+**Scala (spark-shell)**: Spark UI at http://localhost:4054, exit with `:quit`
+```bash
+cd setup-spark35
+docker compose exec spark spark-shell --conf spark.ui.port=4044
+```
+```scala
+import org.apache.spark.sql.functions._
+val df = spark.range(20000000).withColumn("k", col("id") % 100)
+df.groupBy("k").agg(count("*").as("n"), sum("id").as("total")).orderBy("k").show(5)
+```
+
+**Python (pyspark)**: Spark UI at http://localhost:4055, exit with `exit()`
+```bash
+cd setup-spark35
+docker compose exec spark pyspark --conf spark.ui.port=4045
+```
+```python
+from pyspark.sql import functions as F
+df = spark.range(20_000_000).withColumn("k", F.col("id") % 100)
+df.groupBy("k").agg(F.count("*").alias("n"), F.sum("id").alias("total")).orderBy("k").show(5)
+```
+Both run the same job (20M rows, 100 keys) and print the same table: `n = 200000` per key, `total = 1999990000000, 1999990200000, …`. It appears in the Jobs and SQL tabs of the UI.
+
+**As a script** (save the file anywhere in the repo, it is visible under `/workspace/...`):
+```bash
+docker compose exec spark spark-shell -i /workspace/job.scala   # end job.scala with System.exit(0)
+docker compose exec spark spark-submit /workspace/job.py        # job.py creates spark = SparkSession.builder.getOrCreate()
+```
+- Container ports 4040–4045 map to host ports 4050–4055. Without `spark.ui.port`, each app (shell, notebook, `bench.py`) takes the first free port starting at 4040 (→ 4050). Check yours with `sc.uiWebUrl` (Scala) or `spark.sparkContext.uiWebUrl` (Python), then add 10.
+- The live UI goes away when the app exits. Finished apps are in the History Server at http://localhost:18081.
+
+## Files
+| File | Plan § | Purpose |
+|---|---|---|
+| `docker-compose.yml`, `Dockerfile` | 2.1 | The stack above |
+| `conf/spark-defaults.conf` | 1.6, M04 | Baseline config (catalog, s3a, event logs, Prometheus) |
+| `conf/s3.json` | 2.1 | Local S3 credentials |
+| `data/download_tlc.sh` | 3 | Downloads NYC TLC monthly Parquet and the zone lookup |
+| `data/prepare_tlc.py` | 3 | Fixes schema drift, partitions by `pickup_date`, optional `--copies N` |
+| `data/gen_synthetic.py` | 3 | Seeded skewed data: zipf, hotkey, nullheavy, tinyfiles, nested, wide, … |
+| `bench/bench.py` | 1.4–1.5, 11 | Warm-up + N fresh-session runs, metrics, checksum gate, pass criteria, one CSV row per variant |
+| `bench/run_labs.sh` | 7 | Runs every variant of every lab, baseline first |
+| `bench/labs/common.py` | 3 | Paths, loaders, synthetic stand-ins for the public datasets |
+| `bench/labs/lab01…lab31_*.py` | 7 | The 31 labs, one module each |
 
 ## Lab contract
 ```python
-VARIANTS = {"baseline": {...conf}, "fix": {...conf}}   # each variant changes ONE variable (plan §1.2)
+VARIANTS = {"baseline": {...conf}, "fix": {...conf}}   # each variant changes ONE variable
 def build(spark, variant): return <DataFrame>           # lazy query, executed with a noop write
 # optional
-def setup(spark): ...                                   # idempotent one-off preparation (e.g. materialize a skewed copy)
-def run(spark, variant): return {"files": n, ...}       # custom action (writes, collect, multi-action) + extra metrics
-def result(spark, variant): return <DataFrame>          # what to checksum, when it is not build()
+def setup(spark): ...                                   # idempotent one-off preparation
+def run(spark, variant): return {"files": n, ...}       # custom action + extra metrics
+def result(spark, variant): return <DataFrame>          # what to checksum, if not build()
 CHECK_CORRECTNESS = True                                # False only when a variant changes the result by design
-EXPECT = {"fix": {"max_over_median": ("<", 2.0),                     # absolute criterion
-                  "runtime_median_s": ("<", 0.8, "x_baseline")}}    # relative to the baseline row
+EXPECT = {"fix": {"max_over_median": ("<", 2.0),                     # absolute
+                  "runtime_median_s": ("<", 0.8, "x_baseline")}}    # relative to baseline
 ```
-Output per variant: one row in `<out>/<lab>.csv` with runtime median/p95/CV, input/output, shuffle R/W, spill, GC %, peak memory, tasks, max/median/p95 task, max/median ratio, extra metrics, `correct` (OK / MISMATCH / reference / n/a), and `verdict` (PASS / FAIL with the failed criterion). The effective Spark config is saved next to it (`<lab>.csv.<variant>.env.json`) for the config record (plan §1.6).
+Each variant writes one row to `<out>/<lab>.csv`: runtime (median / p95 / CV), I/O, shuffle, spill, GC %, peak memory, task skew (max / median / p95), `correct` (OK / MISMATCH / reference / n/a) and `verdict` (PASS / FAIL + failed criterion). The effective config is saved as `<lab>.csv.<variant>.env.json`.
 
+## Differences from `../setup`
+| | `../setup` | this folder |
+|---|---|---|
+| Spark / Scala / Java | 4.1.1 / 2.13 / 21 | 3.5.0 / 2.12 / 17 |
+| Iceberg runtime | `iceberg-spark-runtime-4.1_2.13` | `iceberg-spark-runtime-3.5_2.12` |
+| s3a (Hadoop → AWS SDK) | 3.4.2 → SDK v2 | 3.3.4 → SDK v1 `aws-java-sdk-bundle:1.12.262` |
+| Python libs | latest | `pandas<2.2`, `pyarrow<15`, `numpy<2` |
+| ANSI mode | on | off |
+| Event logs | `s3a://spark-events/` | `s3a://spark-events/spark35/` (Hadoop 3.3 rejects a bucket root) |
+| Host ports (Jupyter / UI / History / S3 / REST) | 8888 / 4040 / 18080 / 8333 / 8181 | 8889 / 4050 / 18081 / 8334 / 8182 |
+| Lab 26 | baseline / explicit / variant | baseline / explicit (VARIANT is Spark 4.0+) |
+
+**Verified:** smoke test (s3a Parquet, Iceberg REST, History Server) and lab 03 (41.2M rows, median of 3 runs after 1 warm-up). All variants PASS with identical checksums. The other labs have not been run on this stack yet.
+
+| lab03 variant | Spark 3.5.0 (2026-11-02) median (max/median) | Spark 4.1.1 (2026-10-04) median (max/median) |
+|---|---|---|
+| baseline | 25.3 s (9.6) | 19.2 s (7.6) |
+| aqe_skew | 9.5 s (1.7) | 9.7 s (1.7) |
+| salted | 12.4 s (1.9) | 13.6 s (2.2) |
 
 ## Limits
-- Local mode is a single JVM. Network, executor loss, S3 throttling, dynamic allocation and Kubernetes labs need EMR or EKS (plan §2.1).
-- Pass criteria are calibrated for the local 2024 dataset. Relative (`x_baseline`) criteria carry over to other scales; absolute ones (e.g. file counts) do not.
-- Leave at least 20 GB of free disk for the local S3 volume; scale-up (`--copies`) needs proportionally more.
+- Local mode (`local[8]`, 8 GB driver, 12 GB container) is a single JVM. Network, executor-loss, S3-throttling, dynamic-allocation and Kubernetes labs need EMR or EKS.
+- Pass criteria are calibrated on the 2024 dataset. Relative (`x_baseline`) criteria carry over to other scales; absolute ones (e.g. file counts) do not.
+- Keep at least 20 GB free for the local S3 volume; `--copies` needs proportionally more.

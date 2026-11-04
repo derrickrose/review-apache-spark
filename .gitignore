@@ -1,12 +1,89 @@
-venv
-.idea
-target
-*.parquet
-*.gz
-test_tech
-test_tech_2
-**/**data/*
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# =============================================================================
+# Scala / JVM (sbt, Maven, IntelliJ/Metals)
+# =============================================================================
+target/
+project/target/
+project/project/
+.bsp/
+.metals/
+.bloop/
+*.class
+*.jar
+
+# =============================================================================
+# Spark local runtime artifacts
+# =============================================================================
+# Hive metastore (Derby) + local warehouse created by saveAsTable / enableHiveSupport
+metastore_db/
+spark-warehouse/
+derby.log
+
+# Checkpoints / streaming state / event logs
+checkpoint/
+checkpoints/
+_checkpoint/
+spark-events/
+spark-logs/
+
+# Spark / Hadoop write outputs
+_SUCCESS
+_committed_*
+_started_*
 *.crc
-**/_SUCCESS
-**/*/.pyc
-**/__pycache__/*
+_delta_log/
+
+# =============================================================================
+# Data (datasets and generated outputs: keep out of git)
+# =============================================================================
+data/
+data_flights/
+write_data/
+output_partition/
+setup/raw/tlc/yellow/
+
+*.parquet
+*.orc
+*.avro
+*.gz
+*.snappy
+*.zst
+
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+
+# =============================================================================
+# Local scratch folders
+# =============================================================================
+test_tech/
+test_tech_2/
+
+# =============================================================================
+# IDE / editor / OS
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings (machine specific)
+.claude/settings.local.json

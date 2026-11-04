@@ -17,7 +17,6 @@ from pyspark.sql.types import (
 
 from generator import make_guitars, make_guitar_sales
 
-
 SHUFFLE_PARTITIONS = 100
 N_GUITARS = 40_000
 N_SALES = 5_000_000
