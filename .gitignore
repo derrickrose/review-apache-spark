@@ -55,6 +55,7 @@ data/
 data_flights/
 write_data/
 output_partition/
+generated_data/
 setup/raw/tlc/yellow/
 
 *.parquet
