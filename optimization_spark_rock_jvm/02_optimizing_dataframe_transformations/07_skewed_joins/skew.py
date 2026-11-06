@@ -3,6 +3,11 @@ from pyspark.sql import SparkSession
 spark = (
     SparkSession.builder.appName("Skew joins")
     .master("local[*]")
+    .config(
+        "spark.local.dir",
+        "/media/frils/disk_local_d/spark-tmp,/media/frils/disk_local_e/spark-tmp,/tmp/spark-tmp",
+    )
+    .config("spark.io.compression.codec", "zstd")
     .config("spark.sql.adaptive.enabled", "false")
     .getOrCreate()
 )
@@ -34,7 +39,10 @@ import pyspark.sql.functions as F
 
 joined_df = (
     laptops_df.join(laptops_offers_df, on=["make", "model"])
-    .filter(F.round(F.abs(laptops_df["proc_speed"] - laptops_offers_df["proc_speed"]), 1) <= 0.1)
+    .filter(
+        F.round(F.abs(laptops_df["proc_speed"] - laptops_offers_df["proc_speed"]), 1)
+        <= 0.1
+    )
     .groupBy(laptops_df["registration"])
     .agg(F.avg(laptops_offers_df["sale_price"]).alias("avg_price"))
 )
