@@ -1,6 +1,6 @@
 # RDD Transformations (5:06)
 
-Short intro lesson. There is **no source file** for it in `scala/part5rddtransformations/`, so this note is
+Short intro lesson. There is **no source file** for it in [`scala/part5rddtransformations/`](../scala/part5rddtransformations/), so this note is
 inferred from the section content.
 
 ## What the section is about

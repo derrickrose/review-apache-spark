@@ -1,6 +1,6 @@
 # Skewed Joins (31:26)
 
-Source: `scala/part4rddjoins/RDDSkewedJoins.scala` (data from `scala/generator/`)
+Source: [`scala/part4rddjoins/RDDSkewedJoins.scala`](../scala/part4rddjoins/RDDSkewedJoins.scala) (data from [`scala/generator/`](../scala/generator/))
 
 This is the RDD version of `02_optimizing_dataframe_transformations/07_skewed_joins`.
 
@@ -15,6 +15,10 @@ For each laptop, compute the **average sale price of similar offers**.
 The data generator (`DataGenerator.randomLaptopModel`) is skewed: 50% of the rows are forced to **Razer Blade**, and
 the rest are spread uniformly over 7 models (Razer Blade included), so about **57% of all rows share one key**.
 Proc speeds are `3.0` to `3.8` (one decimal). Joining on `(make, model)` sends more than half the data to a single task.
+
+Data details ([`DataGenerator.scala`](../scala/generator/DataGenerator.scala)): registrations are 7 random alphanumeric characters, sale prices are integers from 500 to 1999,
+and laptops and offers both use the same skewed `randomLaptopModel()`. The `uniformDist` parameter of `randomLaptop` /
+`randomLaptopOffer` is **ignored** (it's never passed on), so you can't generate a non-skewed version to compare against.
 
 ## Plain join (skewed)
 ```scala

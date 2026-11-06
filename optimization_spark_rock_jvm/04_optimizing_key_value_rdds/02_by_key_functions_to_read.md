@@ -1,10 +1,14 @@
 # By Key Functions (23:10)
 
-Source: `scala/part5rddtransformations/ByKeyFunctions.scala` (run on the Docker cluster, `master("local[2]")` in the file)
+Source: [`scala/part5rddtransformations/ByKeyFunctions.scala`](../scala/part5rddtransformations/ByKeyFunctions.scala) (run on the Docker cluster, `master("local[2]")` in the file)
 
 ## Scenario
 `wordCounts`: 2M random `(word, occurrences)` pairs, with words picked from `words.txt`.
 Goal: the total count per word, returned with `collectAsMap()`.
+
+Data: `words.txt` is the same file as [`data/lipsum/words.txt`](../../data/lipsum/words.txt) in your repo. The pairs
+are generated on the driver with `Seq.fill(2000000)` and then `sc.parallelize`d, so all 2M tuples are built in driver
+memory first.
 
 ## 1. `groupByKey` + `mapValues(_.sum)`: the intuitive, dangerous version
 ```scala

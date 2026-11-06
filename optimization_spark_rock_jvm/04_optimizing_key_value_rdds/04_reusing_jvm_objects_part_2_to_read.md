@@ -1,6 +1,6 @@
 # Reusing JVM Objects, Part 2 (12:11)
 
-Source: `scala/part5rddtransformations/ReusingObjects.scala`, version 3 (`UglyTextStats`)
+Source: [`scala/part5rddtransformations/ReusingObjects.scala`](../scala/part5rddtransformations/ReusingObjects.scala), version 3 (`UglyTextStats`)
 
 ## Version 3: raw JVM `Array[Int]` + while loops
 Push the idea from part 1 to the extreme:

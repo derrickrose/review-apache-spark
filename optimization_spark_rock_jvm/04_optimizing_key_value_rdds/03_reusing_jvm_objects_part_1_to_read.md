@@ -1,6 +1,6 @@
 # Reusing JVM Objects, Part 1 (24:57)
 
-Source: `scala/part5rddtransformations/ReusingObjects.scala`, versions 1 and 2.
+Source: [`scala/part5rddtransformations/ReusingObjects.scala`](../scala/part5rddtransformations/ReusingObjects.scala), versions 1 and 2.
 (How the file splits across the 2 videos is my guess: versions 1-2 here, version 3 in part 2.)
 
 ## Scenario
@@ -15,6 +15,19 @@ Stats per source id, and they must be **very fast**:
 
 All versions use `aggregateByKey(zero)(aggregateNewRecord, combineStats)`. The by-key function is already the
 right one, so this lesson is about **what the aggregation functions allocate**.
+
+## Data ([`DataGenerator.scala`](../scala/generator/DataGenerator.scala), `generateText`)
+- Lorem ipsum built from [`data/lipsum/words.txt`](../../data/lipsum/words.txt) (already in your repo). One paragraph
+  per line, each line prefixed with a random sender: `"<1..nSenders> // <text>"`.
+- The lesson uses `generateText(textPath, 60000000, 3000000, 200)`: 60M words, 3M lines, 200 data sources, so about 15k lines per key.
+- Words get a `,` appended about 20% of the time, sentences end with `.`, and the first word of each sentence is capitalized.
+
+### ⚠️ Effects of the parsing in the course code
+- `line.split("//")` keeps the spaces: the key is `"35 "` (trailing space) and the text starts with a space.
+  Then `record.split(" ")` returns a **leading empty string** (Java's `split` keeps leading empties), so `nWords` is
+  **over-counted by 1 per line**.
+- `word == "imperdiet"` misses `"imperdiet,"`, `"imperdiet."` and `"Imperdiet"`, so the occurrence count is **too low**.
+- This doesn't change the lesson's point (allocation cost), and all 3 versions are wrong in the same way, so their results still match.
 
 ## Version 1: immutable case class
 ```scala

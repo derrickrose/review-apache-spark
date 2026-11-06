@@ -1,10 +1,12 @@
 # Cogrouping (20:30)
 
-Source: `scala/part4rddjoins/CogroupingRDDs.scala`
+Source: [`scala/part4rddjoins/CogroupingRDDs.scala`](../scala/part4rddjoins/CogroupingRDDs.scala)
 
 ## Scenario
 Same exam data plus a third file, `examEmails.txt` (id, email).
 For every candidate: if the best attempt is ≥ 9.0, send "PASSED" to their email, otherwise "FAILED".
+
+Data: same exam files as lesson 01 (see the *Data* section there).
 
 ## Plain version: 2 chained joins
 ```scala
@@ -40,5 +42,16 @@ candidates.cogroup(scores, emails)
 - Pre-aggregate first (`reduceByKey(Math.max)`) so each key has one score.
 
 ## Notes on the code
+- **Different pass threshold from lesson 01:** `SimpleRDDJoins` counts a pass as `> 9.0`, while `CogroupingRDDs` uses
+  `>= 9.0`. With scores in steps of 0.1, a best attempt of exactly `9.0` passes here but fails in lesson 01.
 - `coGroupedJoin` calls `result.count()` twice. The second call recomputes the whole lineage because nothing is cached.
   Look at it in the UI if the second job surprises you.
+
+## PySpark gotcha
+PySpark's `rdd.cogroup(other, numPartitions=None)` accepts **only one** other RDD.
+`candidates.cogroup(scores, emails)` passes `emails` as `numPartitions` and fails with a confusing
+`RDD_TRANSFORM_ONLY_VALID_ON_DRIVER` pickling error. The N-way version is **`groupWith`**:
+```python
+candidates.groupWith(scores, emails)   # (id, (names, scores, emails)) as ResultIterables
+```
+See [`02_cogrouping_rdds.py`](02_cogrouping_rdds.py).

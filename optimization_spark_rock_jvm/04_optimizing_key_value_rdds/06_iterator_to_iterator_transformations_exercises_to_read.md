@@ -1,6 +1,6 @@
 # Iterator-to-iterator Transformations - Exercises (9:40)
 
-Source: `scala/part5rddtransformations/I2ITransformations.scala` (`printTopMetricsEx1`, `printTopMetricsEx2`)
+Source: [`scala/part5rddtransformations/I2ITransformations.scala`](../scala/part5rddtransformations/I2ITransformations.scala) (`printTopMetricsEx1`, `printTopMetricsEx2`)
 
 The exercise: explain why each of these 2 "almost right" top-10 implementations is better than the naive `sortBy`
 but worse than the I2I version.

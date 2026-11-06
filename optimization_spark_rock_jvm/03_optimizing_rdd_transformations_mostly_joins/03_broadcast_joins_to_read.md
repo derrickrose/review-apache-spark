@@ -1,6 +1,6 @@
 # Broadcast Joins (14:46)
 
-Source: `scala/part4rddjoins/RDDBroadcastJoins.scala` (shown on camera in the Spark Shell)
+Source: [`scala/part4rddjoins/RDDBroadcastJoins.scala`](../scala/part4rddjoins/RDDBroadcastJoins.scala) (shown on camera in the Spark Shell)
 
 ## Scenario
 A competition with 10M participants. `prizes` is a tiny lookup RDD `(1, gold), (2, silver), (3, bronze)`,

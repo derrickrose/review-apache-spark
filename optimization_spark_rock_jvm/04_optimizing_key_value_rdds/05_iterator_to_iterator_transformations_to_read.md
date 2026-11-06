@@ -1,10 +1,15 @@
 # Iterator-to-iterator Transformations (21:19)
 
-Source: `scala/part5rddtransformations/I2ITransformations.scala` (`printTopMetrics`, `printTopMetricsI2I`)
+Source: [`scala/part5rddtransformations/I2ITransformations.scala`](../scala/part5rddtransformations/I2ITransformations.scala) (`printTopMetrics`, `printTopMetricsI2I`)
 
 ## Scenario
 Science project: 10M metrics `(identifier, value)` (`generated/metrics/metrics10m.txt`).
 Return the **10 smallest ("best")** metrics.
+
+## Data ([`DataGenerator.scala`](../scala/generator/DataGenerator.scala), `generateMetrics`)
+`"<name> <value>"`: `name` is 17 random lowercase letters and `value` is a uniform `Double` in `[0, 1_000_000)`.
+The lesson file is `metrics10m.txt`, so it was generated with `nMetrics = 10_000_000`.
+(The `limit` parameter is ignored: the code hard-codes `1000000`.)
 
 ## Naive version
 ```scala
