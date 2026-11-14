@@ -5,6 +5,7 @@ All variants extract (id, datetime, cloud_cover) for items with eo:cloud_cover <
     explicit : from_json with an explicit DDL schema (one pass, only needed fields)
     variant  : parse_json → VARIANT + variant_get (Spark 4)
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -18,13 +19,23 @@ def build(spark, variant):
     if variant == "baseline":
         path = C.REAL["stac"] if C.SOURCE == "real" else C.SYN["stac"]
         j = spark.read.json(path)
-        out = j.select("id", F.col("properties.datetime").alias("dt"), F.col("properties.`eo:cloud_cover`").alias("cc"))
+        out = j.select(
+            "id",
+            F.col("properties.datetime").alias("dt"),
+            F.col("properties.`eo:cloud_cover`").alias("cc"),
+        )
     elif variant == "explicit":
         j = raw.select(F.from_json("value", SCHEMA).alias("j"))
-        out = j.select("j.id", F.col("j.properties.datetime").alias("dt"), F.col("j.properties.`eo:cloud_cover`").alias("cc"))
+        out = j.select(
+            "j.id",
+            F.col("j.properties.datetime").alias("dt"),
+            F.col("j.properties.`eo:cloud_cover`").alias("cc"),
+        )
     else:
         v = raw.select(F.parse_json("value").alias("v"))
-        out = v.select(F.variant_get("v", "$.id", "string").alias("id"),
-                       F.variant_get("v", "$.properties.datetime", "string").alias("dt"),
-                       F.variant_get("v", "$.properties['eo:cloud_cover']", "double").alias("cc"))
+        out = v.select(
+            F.variant_get("v", "$.id", "string").alias("id"),
+            F.variant_get("v", "$.properties.datetime", "string").alias("dt"),
+            F.variant_get("v", "$.properties['eo:cloud_cover']", "double").alias("cc"),
+        )
     return out.where(F.col("cc") < 10)

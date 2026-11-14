@@ -6,6 +6,7 @@ OSM nodes bucketed on a 1° lat/lon grid: dense cities make a few cells dominate
     rebalance: REBALANCE(cell) hint      → AQE splits oversized partitions
 Rows are unchanged by every variant (only placement changes), so checksums must match.
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -20,6 +21,16 @@ EXPECT = {
 def build(spark, variant):
     n = C.osm(spark).where("type = 'node'").select("id", "lat", "lon")
     if variant == "fine":
-        return n.withColumn("cell", F.concat_ws(":", F.floor(n.lat * 10), F.floor(n.lon * 10))).repartition(200, "cell").drop("cell")
+        return (
+            n.withColumn(
+                "cell", F.concat_ws(":", F.floor(n.lat * 10), F.floor(n.lon * 10))
+            )
+            .repartition(200, "cell")
+            .drop("cell")
+        )
     n = n.withColumn("cell", F.concat_ws(":", F.floor("lat"), F.floor("lon")))
-    return (n.repartition(200, "cell") if variant == "baseline" else n.hint("rebalance", "cell")).drop("cell")
+    return (
+        n.repartition(200, "cell")
+        if variant == "baseline"
+        else n.hint("rebalance", "cell")
+    ).drop("cell")

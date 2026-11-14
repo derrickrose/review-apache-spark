@@ -7,12 +7,20 @@ repartition(N) produces N files. (Spark ignores distribution mode in CTAS/RTAS b
     partitioned : partitioned by VendorID, same repartition(2000) → hash distribution → few files
     compacted   : baseline layout + rewrite_data_files → read query on compacted table
 """
+
 from pyspark.sql import functions as F
 import common as C
 
-T = {"baseline": "lab.db.l28_small", "partitioned": "lab.db.l28_part", "compacted": "lab.db.l28_compacted"}
+T = {
+    "baseline": "lab.db.l28_small",
+    "partitioned": "lab.db.l28_part",
+    "compacted": "lab.db.l28_compacted",
+}
 VARIANTS = {"baseline": {}, "partitioned": {}, "compacted": {}}
-EXPECT = {"partitioned": {"data_files": ("<", 0.1, "x_baseline")}, "compacted": {"data_files": ("<", 0.05, "x_baseline")}}
+EXPECT = {
+    "partitioned": {"data_files": ("<", 0.1, "x_baseline")},
+    "compacted": {"data_files": ("<", 0.05, "x_baseline")},
+}
 
 
 def setup(spark):
@@ -22,11 +30,21 @@ def setup(spark):
 def run(spark, variant):
     t = C.trips(spark).drop("pickup_date").repartition(2000)
     w = t.writeTo(T[variant]).using("iceberg")
-    (w.partitionedBy(F.col("VendorID")) if variant == "partitioned" else w).createOrReplace()
+    (
+        w.partitionedBy(F.col("VendorID")) if variant == "partitioned" else w
+    ).createOrReplace()
     if variant == "compacted":
-        spark.sql(f"CALL lab.system.rewrite_data_files(table => '{T[variant].split('.', 1)[1]}')").show()
-    spark.table(T[variant]).groupBy("PULocationID").agg(F.sum("fare_amount")).write.format("noop").mode("overwrite").save()
-    f = spark.table(T[variant] + ".files").agg(F.count("*").alias("n"), F.avg("file_size_in_bytes").alias("avg")).first()
+        spark.sql(
+            f"CALL lab.system.rewrite_data_files(table => '{T[variant].split('.', 1)[1]}')"
+        ).show()
+    spark.table(T[variant]).groupBy("PULocationID").agg(
+        F.sum("fare_amount")
+    ).write.format("noop").mode("overwrite").save()
+    f = (
+        spark.table(T[variant] + ".files")
+        .agg(F.count("*").alias("n"), F.avg("file_size_in_bytes").alias("avg"))
+        .first()
+    )
     return {"data_files": f["n"], "avg_file_kb": round(f["avg"] / 1024, 1)}
 
 

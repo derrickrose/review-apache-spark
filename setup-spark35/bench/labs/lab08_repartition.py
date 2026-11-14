@@ -6,6 +6,7 @@ Compare the Exchange variants with explain("formatted"):
     roundrobin: repartition(200)                  RoundRobinPartitioning(200)
     rebalance : REBALANCE hint                    AQE splits/coalesces to the advisory size
 """
+
 import common as C
 
 VARIANTS = {"baseline": {}, "roundrobin": {}, "rebalance": {}}
@@ -17,7 +18,9 @@ EXPECT = {
 
 
 def build(spark, variant):
-    t = C.trips(spark, ["PULocationID", "tpep_pickup_datetime", "fare_amount", "trip_distance"])
+    t = C.trips(
+        spark, ["PULocationID", "tpep_pickup_datetime", "fare_amount", "trip_distance"]
+    )
     if variant == "baseline":
         return t.repartition("PULocationID")
     if variant == "roundrobin":

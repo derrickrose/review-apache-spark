@@ -4,6 +4,7 @@ The default for DELETE/UPDATE/MERGE is copy-on-write (rewrite affected data file
 writes delete files instead (cheaper write, more expensive read until compaction).
 Both variants must end with identical table contents.
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -19,13 +20,27 @@ def setup(spark):
 
 def run(spark, variant):
     import time
+
     name, mode = TBL[variant], MODE[variant]
-    (C.trips(spark).where(F.month("pickup_date") <= 3).drop("pickup_date")
-     .writeTo(name).using("iceberg").partitionedBy(F.days("tpep_pickup_datetime"))
-     .tableProperty("write.delete.mode", mode).tableProperty("write.update.mode", mode)
-     .tableProperty("write.merge.mode", mode).createOrReplace())
-    C.trips(spark).where("pickup_date = '2024-02-10'").select("VendorID", "tpep_pickup_datetime", "PULocationID") \
-        .dropDuplicates(["VendorID", "tpep_pickup_datetime", "PULocationID"]).createOrReplaceTempView("l30_src")
+    (
+        C.trips(spark)
+        .where(F.month("pickup_date") <= 3)
+        .drop("pickup_date")
+        .writeTo(name)
+        .using("iceberg")
+        .partitionedBy(F.days("tpep_pickup_datetime"))
+        .tableProperty("write.delete.mode", mode)
+        .tableProperty("write.update.mode", mode)
+        .tableProperty("write.merge.mode", mode)
+        .createOrReplace()
+    )
+    C.trips(spark).where("pickup_date = '2024-02-10'").select(
+        "VendorID", "tpep_pickup_datetime", "PULocationID"
+    ).dropDuplicates(
+        ["VendorID", "tpep_pickup_datetime", "PULocationID"]
+    ).createOrReplaceTempView(
+        "l30_src"
+    )
     t0 = time.time()
     spark.sql(f"DELETE FROM {name} WHERE PULocationID = 132")
     spark.sql(f"DELETE FROM {name} WHERE PULocationID = 138")
@@ -34,12 +49,19 @@ def run(spark, variant):
                   WHEN MATCHED THEN UPDATE SET t.tip_amount = 0""")
     write_s = time.time() - t0
     t1 = time.time()
-    spark.table(name).groupBy("PULocationID").agg(F.sum("tip_amount")).write.format("noop").mode("overwrite").save()
+    spark.table(name).groupBy("PULocationID").agg(F.sum("tip_amount")).write.format(
+        "noop"
+    ).mode("overwrite").save()
     read_s = time.time() - t1
-    return {"write_s": round(write_s, 2), "read_s": round(read_s, 2),
-            "data_files": spark.table(name + ".data_files").count(),
-            "delete_files": spark.table(name + ".delete_files").count()}
+    return {
+        "write_s": round(write_s, 2),
+        "read_s": round(read_s, 2),
+        "data_files": spark.table(name + ".data_files").count(),
+        "delete_files": spark.table(name + ".delete_files").count(),
+    }
 
 
 def result(spark, variant):
-    return spark.table(TBL[variant]).select("VendorID", "tpep_pickup_datetime", "PULocationID", "fare_amount", "tip_amount")
+    return spark.table(TBL[variant]).select(
+        "VendorID", "tpep_pickup_datetime", "PULocationID", "fare_amount", "tip_amount"
+    )

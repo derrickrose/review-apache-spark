@@ -6,6 +6,7 @@ partition column and data spread across all tasks, this is ~tasks × values.
     clustered  : repartition("pickup_hour") first → each value in one task → 1 file per value
     lower_card : partitionBy(pickup_date) after repartition (14 values) — a design change
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -17,11 +18,15 @@ EXPECT = {
 
 
 def _df(spark):
-    return (C.trips(spark, ["tpep_pickup_datetime", "PULocationID", "fare_amount"])
-            .withColumn("pickup_hour", F.date_format("tpep_pickup_datetime", "yyyy-MM-dd-HH"))
-            .withColumn("pickup_date", F.to_date("tpep_pickup_datetime"))
-            .where(F.col("pickup_date").between("2024-03-01", "2024-03-14"))
-            .repartition(32))                                   # upstream shuffle: data spread over 32 tasks
+    return (
+        C.trips(spark, ["tpep_pickup_datetime", "PULocationID", "fare_amount"])
+        .withColumn(
+            "pickup_hour", F.date_format("tpep_pickup_datetime", "yyyy-MM-dd-HH")
+        )
+        .withColumn("pickup_date", F.to_date("tpep_pickup_datetime"))
+        .where(F.col("pickup_date").between("2024-03-01", "2024-03-14"))
+        .repartition(32)
+    )  # upstream shuffle: data spread over 32 tasks
 
 
 def _path(variant):
@@ -42,4 +47,6 @@ def run(spark, variant):
 
 
 def result(spark, variant):
-    return spark.read.parquet(_path(variant)).select("tpep_pickup_datetime", "PULocationID", "fare_amount")
+    return spark.read.parquet(_path(variant)).select(
+        "tpep_pickup_datetime", "PULocationID", "fare_amount"
+    )

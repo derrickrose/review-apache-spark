@@ -16,6 +16,7 @@ orderBy(), sort()                       ORDER BY                                
 join()                                  JOIN                                       combine two DataFrames by a key
 
 """
+
 ## links https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.html
 
 # handling missing values in DataFrame

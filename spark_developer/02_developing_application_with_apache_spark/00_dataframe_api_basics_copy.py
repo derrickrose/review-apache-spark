@@ -36,18 +36,28 @@ import pandas as pd
 
 
 @pandas_udf(returnType=StringType())
-def upper_case_pandas_udf(values: pd.Series)-> pd.Series:
+def upper_case_pandas_udf(values: pd.Series) -> pd.Series:
     return values.str.upper()
 
 
-df = spark.read.csv("../data/", header=True, inferSchema=True, multiLine=True, quote='"', escape='"', sep=",",
-                    mode="PERMISSIVE").select("id",
-                                              "listing_url").filter(
-
-    col("listing_url").isNotNull() & col("id").isNotNull() & (regexp_count("listing_url", lit("^https")) > 0)
-
-).withColumn(
-    "URL", upper_case(col("listing_url"))
+df = (
+    spark.read.csv(
+        "../data/",
+        header=True,
+        inferSchema=True,
+        multiLine=True,
+        quote='"',
+        escape='"',
+        sep=",",
+        mode="PERMISSIVE",
+    )
+    .select("id", "listing_url")
+    .filter(
+        col("listing_url").isNotNull()
+        & col("id").isNotNull()
+        & (regexp_count("listing_url", lit("^https")) > 0)
+    )
+    .withColumn("URL", upper_case(col("listing_url")))
 )
 
 
@@ -63,8 +73,6 @@ print("UDF classique:", time.time() - t0)
 t0 = time.time()
 big_df.withColumn("URL", upper_case_pandas_udf(col("listing_url"))).count()
 print("Pandas UDF:", time.time() - t0)
-
-
 
 
 ## links https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.html

@@ -245,7 +245,7 @@ if __name__ == "__main__":
     # demo_coalescing_partitions()
     # demo_switching_to_broadcast_join()
     # demo_skew_join() # 23 min ???? bizarre
-    demo_skew_join_aqe_optimized() # 30 min
+    demo_skew_join_aqe_optimized()  # 30 min
     import time
 
     time.sleep(10000)

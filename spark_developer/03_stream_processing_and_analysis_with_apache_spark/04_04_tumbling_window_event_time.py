@@ -73,6 +73,7 @@ order_per_minute = (
 index = 0
 while True:
     import time
+
     time.sleep(30)
     print(f"==============={index}=================")
     spark.sql("SELECT * from order_per_minute").show()

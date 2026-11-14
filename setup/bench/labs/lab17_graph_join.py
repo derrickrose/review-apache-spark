@@ -5,6 +5,7 @@ There is no node_id column: ways carry nds ARRAY<STRUCT<ref>>, so explode first,
     pruned   : project the join keys + needed columns BEFORE the join (less shuffle)
 Rows are identical; compare Shuffle Write and intermediate cardinality (exploded refs per way).
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -15,8 +16,11 @@ EXPECT = {"pruned": {"shuffle_w": ("<", 0.8, "x_baseline")}}
 def build(spark, variant):
     o = C.osm(spark)
     ways, nodes = o.where("type = 'way'"), o.where("type = 'node'")
-    refs = ways.select(F.col("id").alias("way_id"), F.col("tags").alias("way_tags"),
-                       F.posexplode("nds").alias("pos", "nd"))
+    refs = ways.select(
+        F.col("id").alias("way_id"),
+        F.col("tags").alias("way_tags"),
+        F.posexplode("nds").alias("pos", "nd"),
+    )
     if variant == "baseline":
         j = refs.join(nodes, refs.nd.ref == nodes.id)
         return j.select("way_id", "pos", "lat", "lon")

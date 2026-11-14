@@ -10,8 +10,10 @@ spark = (
     SparkSession.builder.appName("reading_data_with_dataframes")
     .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.2.0")
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-    .config("spark.sql.catalog.spark_catalog",
-            "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    .config(
+        "spark.sql.catalog.spark_catalog",
+        "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    )
     .getOrCreate()
 )
 
@@ -136,7 +138,7 @@ from pyspark.sql.types import (
     IntegerType,
     DoubleType,
     LongType,
-    DateType
+    DateType,
 )
 
 schema = StructType(
@@ -271,11 +273,14 @@ df3 = (
 df3.printSchema()
 #
 # writing to parquet file
-df3.write.format("parquet").mode("overwrite").save("../data/01_write_dir/listings.parquet")
+df3.write.format("parquet").mode("overwrite").save(
+    "../data/01_write_dir/listings.parquet"
+)
 import time
 
 
 import os
+
 #
 # for path in os.listdir("../data/01_write_dir"):
 #     if os.path.isdir(f"../data/01_write_dir/{path}"):

@@ -28,6 +28,13 @@ schema = StructType(
         StructField("gender", StringType()),
     ]
 )
-df = spark.read.format("json").schema(schema).load(INPUT).orderBy("id").repartition(20).filter(col("gender") == "male")
+df = (
+    spark.read.format("json")
+    .schema(schema)
+    .load(INPUT)
+    .orderBy("id")
+    .repartition(20)
+    .filter(col("gender") == "male")
+)
 print(df.rdd.getNumPartitions())
 df.write.format("delta").mode("overwrite").partitionBy("gender").save(OUTPUT)

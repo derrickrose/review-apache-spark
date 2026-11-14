@@ -36,7 +36,6 @@ from pyspark.sql.types import (
 )
 from pyspark.sql.functions import window, count, current_timestamp
 
-
 spark = SparkSession.builder.appName("tumbling_window").getOrCreate()
 
 order_schema = StructType(

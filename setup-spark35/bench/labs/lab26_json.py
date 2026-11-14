@@ -5,6 +5,7 @@ All variants extract (id, datetime, cloud_cover) for items with eo:cloud_cover <
     explicit : from_json with an explicit DDL schema (one pass, only needed fields)
     (VARIANT / parse_json is Spark 4.0+ and is not available in this Spark 3.5 stack)
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -18,8 +19,16 @@ def build(spark, variant):
     if variant == "baseline":
         path = C.REAL["stac"] if C.SOURCE == "real" else C.SYN["stac"]
         j = spark.read.json(path)
-        out = j.select("id", F.col("properties.datetime").alias("dt"), F.col("properties.`eo:cloud_cover`").alias("cc"))
+        out = j.select(
+            "id",
+            F.col("properties.datetime").alias("dt"),
+            F.col("properties.`eo:cloud_cover`").alias("cc"),
+        )
     else:
         j = raw.select(F.from_json("value", SCHEMA).alias("j"))
-        out = j.select("j.id", F.col("j.properties.datetime").alias("dt"), F.col("j.properties.`eo:cloud_cover`").alias("cc"))
+        out = j.select(
+            "j.id",
+            F.col("j.properties.datetime").alias("dt"),
+            F.col("j.properties.`eo:cloud_cover`").alias("cc"),
+        )
     return out.where(F.col("cc") < 10)

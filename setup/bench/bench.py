@@ -17,6 +17,7 @@ A lab module exposes:
     python bench.py --lab labs/lab03_join_skew.py --variant baseline --runs 3 --out results.csv
     python bench.py --lab labs/lab03_join_skew.py --variant fix      --runs 3 --out results.csv
 """
+
 import argparse
 import csv
 import importlib.util
@@ -31,7 +32,7 @@ from pyspark.sql import SparkSession, functions as F
 
 
 def load_lab(path):
-    sys.path.insert(0, os.path.dirname(os.path.abspath(path)))     # labs import common.py
+    sys.path.insert(0, os.path.dirname(os.path.abspath(path)))  # labs import common.py
     spec = importlib.util.spec_from_file_location("lab", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -47,8 +48,10 @@ def session(conf):
 
 def checksum(df):
     # Order-independent: row count + sum of per-row hashes (plan §0.4 rule 12)
-    r = df.select(F.count(F.lit(1)).alias("n"),
-                  F.sum(F.xxhash64(*df.columns).cast("decimal(38,0)")).alias("h")).first()
+    r = df.select(
+        F.count(F.lit(1)).alias("n"),
+        F.sum(F.xxhash64(*df.columns).cast("decimal(38,0)")).alias("h"),
+    ).first()
     return f"{r['n']}:{r['h']}"
 
 
@@ -64,8 +67,19 @@ def collect_metrics(spark):
     app = spark.sparkContext.applicationId
     api = f"{ui}/api/v1/applications/{app}"
     stages = requests.get(f"{api}/stages?details=false", timeout=30).json()
-    m = dict(input=0, output=0, shuffle_r=0, shuffle_w=0, spill_mem=0, spill_disk=0, tasks=0, failed=0,
-             gc_ms=0, run_ms=0, peak_mem=0)
+    m = dict(
+        input=0,
+        output=0,
+        shuffle_r=0,
+        shuffle_w=0,
+        spill_mem=0,
+        spill_disk=0,
+        tasks=0,
+        failed=0,
+        gc_ms=0,
+        run_ms=0,
+        peak_mem=0,
+    )
     durations = []
     for st in stages:
         m["input"] += st.get("inputBytes", 0)
@@ -79,12 +93,19 @@ def collect_metrics(spark):
         m["gc_ms"] += st.get("jvmGcTime", 0)
         m["run_ms"] += st.get("executorRunTime", 0)
         m["peak_mem"] = max(m["peak_mem"], st.get("peakExecutionMemory", 0))
-        tl = requests.get(f"{api}/stages/{st['stageId']}/{st['attemptId']}/taskList?length=100000", timeout=60).json()
+        tl = requests.get(
+            f"{api}/stages/{st['stageId']}/{st['attemptId']}/taskList?length=100000",
+            timeout=60,
+        ).json()
         durations += [t.get("duration", 0) for t in tl if t.get("status") == "SUCCESS"]
     med = statistics.median(durations) if durations else 0
-    m.update(max_task_ms=max(durations, default=0), median_task_ms=med, p95_task_ms=pct(durations, 95),
-             max_over_median=round(max(durations, default=0) / med, 2) if med else 0,
-             gc_pct=round(100 * m["gc_ms"] / m["run_ms"], 1) if m["run_ms"] else 0)
+    m.update(
+        max_task_ms=max(durations, default=0),
+        median_task_ms=med,
+        p95_task_ms=pct(durations, 95),
+        max_over_median=round(max(durations, default=0) / med, 2) if med else 0,
+        gc_pct=round(100 * m["gc_ms"] / m["run_ms"], 1) if m["run_ms"] else 0,
+    )
     return m
 
 
@@ -94,14 +115,20 @@ def run_once(lab, variant, conf):
     t0 = time.time()
     extra = {}
     if hasattr(lab, "run"):
-        extra = lab.run(spark, variant) or {}      # labs may return extra metrics (files, sizes, rows)
+        extra = (
+            lab.run(spark, variant) or {}
+        )  # labs may return extra metrics (files, sizes, rows)
     else:
         # A full write to a no-op sink forces complete execution without collecting to the driver
         lab.build(spark, variant).write.format("noop").mode("overwrite").save()
     runtime = time.time() - t0
     metrics = collect_metrics(spark)
     if getattr(lab, "CHECK_CORRECTNESS", True):
-        cs = checksum(lab.result(spark, variant) if hasattr(lab, "result") else lab.build(spark, variant))
+        cs = checksum(
+            lab.result(spark, variant)
+            if hasattr(lab, "result")
+            else lab.build(spark, variant)
+        )
     else:
         cs = "skipped"
     env = {k: v for k, v in spark.sparkContext.getConf().getAll()}
@@ -109,13 +136,19 @@ def run_once(lab, variant, conf):
     return runtime, metrics, cs, env, extra
 
 
-OPS = {"<": lambda a, b: a < b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b, ">=": lambda a, b: a >= b}
+OPS = {
+    "<": lambda a, b: a < b,
+    "<=": lambda a, b: a <= b,
+    ">": lambda a, b: a > b,
+    ">=": lambda a, b: a >= b,
+}
 
 
 def evaluate(expect, row, refs):
     """Criteria: {"metric": (op, value)} absolute, or {"metric": (op, factor, "x_<variant>")} relative to
     the last row of another variant of the same lab (usually "x_baseline") — relative criteria stay valid
-    at every scale (plan §2.2). Returns 'PASS', 'FAIL: ...', or '' when the variant has no criteria."""
+    at every scale (plan §2.2). Returns 'PASS', 'FAIL: ...', or '' when the variant has no criteria.
+    """
     if not expect:
         return ""
 
@@ -163,10 +196,18 @@ def main():
         last = (m, cs, env, extra)
     m, cs, env, extra = last
 
-    row = dict(lab=os.path.basename(a.lab), variant=a.variant, runs=a.runs,
-               runtime_median_s=round(statistics.median(runtimes), 2), runtime_p95_s=round(pct(runtimes, 95), 2),
-               runtime_cv_pct=round(100 * statistics.pstdev(runtimes) / statistics.mean(runtimes), 1),
-               checksum=cs, **m)
+    row = dict(
+        lab=os.path.basename(a.lab),
+        variant=a.variant,
+        runs=a.runs,
+        runtime_median_s=round(statistics.median(runtimes), 2),
+        runtime_p95_s=round(pct(runtimes, 95), 2),
+        runtime_cv_pct=round(
+            100 * statistics.pstdev(runtimes) / statistics.mean(runtimes), 1
+        ),
+        checksum=cs,
+        **m,
+    )
     row["extra"] = extra
 
     # Reference rows of every variant already run (relative criteria) and correctness gate vs baseline (plan §0.5)
@@ -174,14 +215,20 @@ def main():
     prefix = os.path.basename(a.out) + "."
     for f in os.listdir(os.path.dirname(os.path.abspath(a.out))):
         if f.startswith(prefix) and f.endswith(".row.json"):
-            refs[f[len(prefix):-len(".row.json")]] = json.load(open(os.path.join(os.path.dirname(os.path.abspath(a.out)), f)))
+            refs[f[len(prefix) : -len(".row.json")]] = json.load(
+                open(os.path.join(os.path.dirname(os.path.abspath(a.out)), f))
+            )
     baseline = refs.get("baseline")
     if a.variant == "baseline":
         row["correct"] = "reference"
     elif cs == "skipped" or not baseline:
         row["correct"] = "n/a"
     else:
-        row["correct"] = "OK" if baseline["checksum"] == cs else f"MISMATCH (baseline {baseline['checksum']})"
+        row["correct"] = (
+            "OK"
+            if baseline["checksum"] == cs
+            else f"MISMATCH (baseline {baseline['checksum']})"
+        )
     row["verdict"] = evaluate(getattr(lab, "EXPECT", {}).get(a.variant), row, refs)
     json.dump(row, open(f"{a.out}.{a.variant}.row.json", "w"), indent=1)
     row["extra"] = json.dumps(extra)
@@ -193,7 +240,9 @@ def main():
         if new:
             w.writeheader()
         w.writerow(row)
-    json.dump(env, open(f"{a.out}.{a.variant}.env.json", "w"), indent=1)   # config record (plan §1.6)
+    json.dump(
+        env, open(f"{a.out}.{a.variant}.env.json", "w"), indent=1
+    )  # config record (plan §1.6)
     print(json.dumps(row, indent=1))
 
 

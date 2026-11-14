@@ -1,6 +1,5 @@
 from datetime import datetime
 
-
 date1 = datetime.now()
 print(date1)
 print(type(date1))

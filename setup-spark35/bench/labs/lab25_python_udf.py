@@ -1,16 +1,20 @@
 """Core lab 25 — Python UDF vs native Spark (plan §7, M12).
 
-    baseline : @udf row-at-a-time (pickle)       BatchEvalPython
-    arrow    : @udf(useArrow=True)               ArrowEvalPython
-    pandas   : @pandas_udf vectorized            ArrowEvalPython (Series → Series)
-    native   : fare_amount * 0.20                no Python at all
+baseline : @udf row-at-a-time (pickle)       BatchEvalPython
+arrow    : @udf(useArrow=True)               ArrowEvalPython
+pandas   : @pandas_udf vectorized            ArrowEvalPython (Series → Series)
+native   : fare_amount * 0.20                no Python at all
 """
+
 import pandas as pd
 from pyspark.sql import functions as F
 import common as C
 
 VARIANTS = {"baseline": {}, "arrow": {}, "pandas": {}, "native": {}}
-EXPECT = {"native": {"runtime_median_s": ("<", 0.3, "x_baseline")}, "pandas": {"runtime_median_s": ("<", 0.7, "x_baseline")}}
+EXPECT = {
+    "native": {"runtime_median_s": ("<", 0.3, "x_baseline")},
+    "pandas": {"runtime_median_s": ("<", 0.7, "x_baseline")},
+}
 
 
 def _tip(f):

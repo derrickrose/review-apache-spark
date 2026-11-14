@@ -1,9 +1,10 @@
 """Core lab 22 — Cache / recomputation (plan §7, M14). One filtered base, three actions.
 
-    baseline : no cache → the scan + filter runs three times (3 jobs re-reading the input)
-    cache    : base.cache() + materialize once → later actions read InMemoryTableScan
-    cache_bad: cache a base used only once → pure overhead (find when caching hurts)
+baseline : no cache → the scan + filter runs three times (3 jobs re-reading the input)
+cache    : base.cache() + materialize once → later actions read InMemoryTableScan
+cache_bad: cache a base used only once → pure overhead (find when caching hurts)
 """
+
 from pyspark.sql import functions as F
 import common as C
 
@@ -18,7 +19,9 @@ def run(spark, variant):
         base = base.cache()
         base.count()
     if variant == "cache_bad":
-        base.groupBy("PULocationID").count().write.format("noop").mode("overwrite").save()
+        base.groupBy("PULocationID").count().write.format("noop").mode(
+            "overwrite"
+        ).save()
     else:
         for col in ("PULocationID", "DOLocationID", "VendorID"):
             base.groupBy(col).count().write.format("noop").mode("overwrite").save()

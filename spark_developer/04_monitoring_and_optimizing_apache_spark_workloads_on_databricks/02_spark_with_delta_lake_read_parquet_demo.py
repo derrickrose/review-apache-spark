@@ -3,7 +3,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StringType, IntegerType, StructField
 
-
 spark = (
     SparkSession.builder.appName("spark_with_delta_lake_read_parquet_demo")
     # .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.1.0")  # .config(

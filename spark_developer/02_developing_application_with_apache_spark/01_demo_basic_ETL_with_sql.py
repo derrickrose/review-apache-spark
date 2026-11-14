@@ -34,8 +34,7 @@ flights_df.createOrReplaceTempView("flights")
 flights_df.show(10)
 print("flights_df count", flights_df.count())
 
-output_df = spark.sql(
-    """
+output_df = spark.sql("""
 SELECT Extract(year FROM year_month_dayofmonth)  AS Year,
        Extract(month FROM year_month_dayofmonth) AS Month,
        Extract(day FROM year_month_dayofmonth)   AS DayOfMonth,
@@ -47,13 +46,11 @@ FROM   flights
 WHERE  year_month_dayofmonth IS NOT NULL
        AND flightnum IS NOT NULL
        AND crselapsedtime IS NOT NULL 
-"""
-)
+""")
 output_df.show(10)
 print("output_df count", output_df.count())
 
-airfcraft_monthly_flights_duration = spark.sql(
-    """
+airfcraft_monthly_flights_duration = spark.sql("""
 SELECT Concat(Extract(year FROM year_month_dayofmonth),
        Concat('_', Extract(month FROM
        year_month_dayofmonth)))                   AS YearMonth,
@@ -72,8 +69,7 @@ GROUP  BY Concat(Extract(year FROM year_month_dayofmonth),
 ORDER  BY yearmonth DESC,
           tailnum DESC 
 
-"""
-)
+""")
 airfcraft_monthly_flights_duration.show(10)
 print("count", airfcraft_monthly_flights_duration.count())
 

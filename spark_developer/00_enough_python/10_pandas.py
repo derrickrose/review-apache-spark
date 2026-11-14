@@ -15,7 +15,7 @@
 ## to create a DataFrame, we need both the column attributes and data
 
 
-""""
+""" "
 name | age | job
 john | 30  | rh
 jane | 25  | manager
