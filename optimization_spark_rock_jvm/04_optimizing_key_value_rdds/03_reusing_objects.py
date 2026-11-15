@@ -76,7 +76,7 @@ def collect_stats():
 
 # ------------------------------------------------------------------ version 2
 # mutable object, updated in place and returned
-# (allowed: Spark gives each key its own deserialized copy of the zero value)
+# (allowed: PySpark's aggregateByKey hands each key its own copy.deepcopy of the zero value)
 class MutableTextStats:
     # no __slots__: classes defined in a script are pickled by value (cloudpickle),
     # and slotted instances then fail to unpickle ("no attribute '__dict__'")

@@ -29,28 +29,34 @@ word_counts.count()  # materialize once so every job below starts from the same 
 # the most intuitive solution can be the most dangerous:
 #  - shuffles EVERY value so all data for a key lands on one machine
 #  - a skewed key may not fit in an executor's memory -> OOM
-group_by_key = (
-    lambda: word_counts.groupByKey().mapValues(sum).collectAsMap()
-)  # noqa: E731
+def group_by_key():
+    return word_counts.groupByKey().mapValues(sum).collectAsMap()
+
 
 # map-side partial aggregation, shuffles much less data
-reduce_by_key = lambda: word_counts.reduceByKey(add).collectAsMap()  # noqa: E731
+def reduce_by_key():
+    return word_counts.reduceByKey(add).collectAsMap()
+
 
 # like reduceByKey with a zero value
-fold_by_key = lambda: word_counts.foldByKey(0, add).collectAsMap()  # noqa: E731
+def fold_by_key():
+    return word_counts.foldByKey(0, add).collectAsMap()
+
 
 # zero + (agg, record) -> agg + (agg, agg) -> agg ; output type can differ (int -> float)
-aggregate_by_key = lambda: word_counts.aggregateByKey(
-    0.0, add, add
-).collectAsMap()  # noqa: E731
+def aggregate_by_key():
+    return word_counts.aggregateByKey(0.0, add, add).collectAsMap()
+
 
 # the most general one; also lets you choose the output partitioning
-combine_by_key = lambda: word_counts.combineByKey(  # noqa: E731
-    lambda count: count,  # createCombiner: value -> aggregate
-    lambda total, v: total + v,  # mergeValue: inside a partition
-    lambda t1, t2: t1 + t2,  # mergeCombiners: across partitions
-    numPartitions=10,
-).collectAsMap()
+def combine_by_key():
+    return word_counts.combineByKey(
+        lambda count: count,  # createCombiner: value -> aggregate
+        lambda total, v: total + v,  # mergeValue: inside a partition
+        lambda t1, t2: t1 + t2,  # mergeCombiners: across partitions
+        numPartitions=10,
+    ).collectAsMap()
+
 
 if __name__ == "__main__":
     results = [

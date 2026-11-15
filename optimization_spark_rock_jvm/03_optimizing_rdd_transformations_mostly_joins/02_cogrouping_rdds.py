@@ -68,9 +68,8 @@ def cogrouped_join():
     # taken as numPartitions). The N-way version of Scala's cogroup(a, b) is groupWith.
     result = candidates.groupWith(scores, emails).mapValues(decide)
     result.count()
-    return (
-        result.count()
-    )  # 2nd count recomputes the lineage (nothing cached), as in the course
+    # 2nd count recomputes the whole lineage (nothing cached), as in the course
+    return result.count()
 
 
 if __name__ == "__main__":

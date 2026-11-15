@@ -9,6 +9,7 @@ For each laptop, compute the average sale price of "similar" offers.
 ~57% of rows are Razer Blade -> joining on (make, model) is skewed.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -22,8 +23,6 @@ sc = spark.sparkContext
 # Course: 40k laptops x 100k offers. The plain join on (make, model) then builds ~1.3 BILLION
 # Razer Blade pairs alone (~23k x ~57k) - fine-ish on the JVM, hours in Python workers.
 # 10x smaller here (~13M pairs) keeps the same skew. SCALE=1 for course sizes.
-import os  # noqa: E402
-
 SCALE = int(os.environ.get("SCALE", "10"))
 laptops = sc.parallelize([random_laptop() for _ in range(40_000 // SCALE)])
 laptop_offers = sc.parallelize([random_laptop_offer() for _ in range(100_000 // SCALE)])
