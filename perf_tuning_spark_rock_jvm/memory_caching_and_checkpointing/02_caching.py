@@ -8,19 +8,16 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 FLIGHTS_PATH = DATA_DIR / "flights"
 
 spark = (
-    SparkSession.builder
-    .appName("Caching")
+    SparkSession.builder.appName("Caching")
     .config("spark.memory.offHeap.enabled", "true")
-    .config("spark.memory.offHeap.size", 10000000)  # 10 MB - small: OFF_HEAP blocks that don't fit go to disk
+    .config(
+        "spark.memory.offHeap.size", 10000000
+    )  # 10 MB - small: OFF_HEAP blocks that don't fit go to disk
     .master("local")  # 1 core -> 1 task at a time
     .getOrCreate()
 )
 
-flights_df = (
-    spark.read
-    .option("inferSchema", "true")
-    .json(str(FLIGHTS_PATH))
-)
+flights_df = spark.read.option("inferSchema", "true").json(str(FLIGHTS_PATH))
 
 flights_df.count()
 
@@ -90,22 +87,17 @@ ordered_flights_df = flights_df.orderBy("dist")
 # the level only decides memory/disk/off-heap and whether those batches are serialized again.
 ordered_flights_df.persist(
     # no argument = MEMORY_AND_DISK_DESER (PySpark) = MEMORY_AND_DISK (Scala)
-
     # StorageLevel.MEMORY_ONLY
     #   PySpark: serialized -> space-efficient, more CPU to read (= Scala MEMORY_ONLY_SER)
     #   Scala:   deserialized -> fast to read, memory expensive
     #   both:    partitions that don't fit are NOT cached, recomputed when needed; disk: none used
-
     StorageLevel.DISK_ONLY  # disk only - saves memory, slower to read; whole dataset on disk; worth it only if recomputing is expensive
-
     # StorageLevel.MEMORY_AND_DISK
     #   memory first, per partition; partitions that don't fit (or are evicted) go to disk - not "both"
     #   PySpark: serialized (= Scala MEMORY_AND_DISK_SER) | Scala: deserialized (= PySpark MEMORY_AND_DISK_DESER)
     #   disk: only the overflow
-
     # replication:
     # StorageLevel.MEMORY_ONLY_2  # 2 copies on 2 nodes - resiliency, 2x memory (only 1 copy in local mode)
-
     # off-heap:
     # StorageLevel.OFF_HEAP
     #   docs: experimental, "similar to MEMORY_ONLY_SER" but off-heap; needs offHeap.enabled + offHeap.size > 0
@@ -122,7 +114,9 @@ ordered_flights_df.unpersist()
 
 # named cache (shows "orderedFlights" in the Storage tab)
 ordered_flights_df.createOrReplaceTempView("orderedFlights")
-spark.catalog.cacheTable("orderedFlights")  # lazy (SQL "CACHE TABLE" is eager by default)
+spark.catalog.cacheTable(
+    "orderedFlights"
+)  # lazy (SQL "CACHE TABLE" is eager by default)
 spark.table("orderedFlights").count()  # materializes the named cache
 
 # RDDs

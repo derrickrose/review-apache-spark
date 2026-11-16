@@ -26,6 +26,7 @@ word_counts = sc.parallelize(
 ).cache()
 word_counts.count()  # materialize once so every job below starts from the same data
 
+
 # the most intuitive solution can be the most dangerous:
 #  - shuffles EVERY value so all data for a key lands on one machine
 #  - a skewed key may not fit in an executor's memory -> OOM

@@ -7,24 +7,14 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 FLIGHTS_PATH = DATA_DIR / "flights"
 FLIGHTS_PARQUET_PATH = DATA_DIR / "flights_parquet"
 
-spark = (
-    SparkSession.builder
-    .appName("Catalyst Demo")
-    .master("local")
-    .getOrCreate()
-)
+spark = SparkSession.builder.appName("Catalyst Demo").master("local").getOrCreate()
 spark.sparkContext.setLogLevel("DEBUG")
 
-flights = (
-    spark.read
-    .option("inferSchema", "true")
-    .json(str(FLIGHTS_PATH))
-)
+flights = spark.read.option("inferSchema", "true").json(str(FLIGHTS_PATH))
 
 # Catalyst plays nice with chained filters
 not_from_here = (
-    flights
-    .where(col("origin") != "LGA")
+    flights.where(col("origin") != "LGA")
     .where(col("origin") != "ORD")
     .where(col("origin") != "SFO")
     .where(col("origin") != "DEN")
@@ -112,8 +102,7 @@ Filter ((isnotnull(origin#17) AND isnotnull(dest#14)) AND ((NOT (origin#17 = EWR
 flights.write.format("parquet").mode("overwrite").save("catalyst/")
 
 not_from_lga = (
-    spark.read.format("parquet").load("catalyst/")
-    .where(col("origin") != "LGA")
+    spark.read.format("parquet").load("catalyst/").where(col("origin") != "LGA")
 )
 
 not_from_lga.explain()

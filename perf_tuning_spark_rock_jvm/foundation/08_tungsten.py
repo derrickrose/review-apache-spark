@@ -2,12 +2,7 @@ import time
 
 from pyspark.sql import SparkSession
 
-spark = (
-    SparkSession.builder
-    .appName("Tungsten Demo")
-    .master("local")
-    .getOrCreate()
-)
+spark = SparkSession.builder.appName("Tungsten Demo").master("local").getOrCreate()
 
 sc = spark.sparkContext
 
@@ -16,7 +11,9 @@ numbers_rdd.count()
 numbers_rdd.count()  # much faster
 
 # Python RDD rows must be tuples to become DataFrame rows
-numbers_df = numbers_rdd.map(lambda x: (x,)).toDF(["value"]).cache()  # cached with Tungsten
+numbers_df = (
+    numbers_rdd.map(lambda x: (x,)).toDF(["value"]).cache()
+)  # cached with Tungsten
 numbers_df.count()
 numbers_df.count()  # much faster
 

@@ -9,8 +9,7 @@ FLIGHTS_PATH = DATA_DIR / "flights"
 CHECKPOINT_DIR = Path(__file__).resolve().parent / "spark-warehouse"
 
 spark = (
-    SparkSession.builder
-    .appName("Checkpointing")
+    SparkSession.builder.appName("Checkpointing")
     .master("local")  # 1 core -> 1 task at a time
     .getOrCreate()
 )
@@ -22,11 +21,7 @@ sc.setCheckpointDir(str(CHECKPOINT_DIR))
 
 
 def read_flights():
-    return (
-        spark.read
-        .option("inferSchema", "true")
-        .json(str(FLIGHTS_PATH))
-    )
+    return spark.read.option("inferSchema", "true").json(str(FLIGHTS_PATH))
 
 
 # Checkpoint vs cache
